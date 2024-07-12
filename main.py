@@ -1,3 +1,5 @@
+from browser import Browser
 
 if __name__ == '__main__':
-    print('Hello World')
+    browser = Browser()
+    browser.login()
