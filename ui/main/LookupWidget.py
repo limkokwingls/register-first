@@ -1,23 +1,26 @@
+from typing import Callable
+
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QHBoxLayout
 from google.cloud.firestore_v1 import FieldFilter
 
 from config.firebase import db
+from model import StudentInfo
 
 
 class InputField(QWidget):
-    def __init__(self, label: str, handle_response: callable = None):
+    def __init__(self, label: str):
         super().__init__()
         self.setLayout(QVBoxLayout())
         self.label = QLabel(label)
         self.input = QLineEdit()
         self.layout().addWidget(self.label)
         self.layout().addWidget(self.input)
-        self.handle_response = handle_response
 
 
 class LookupWidget(QWidget):
-    def __init__(self):
+    def __init__(self, handle_response: Callable[[StudentInfo | None], None]):
         super().__init__()
+        self.handle_response = handle_response
         self.id_input = InputField("National Id")
         self.reference_no = InputField("Reference No.")
         self.lookup_button = QPushButton("Look Up")
@@ -36,6 +39,9 @@ class LookupWidget(QWidget):
             .where(filter=FieldFilter("nationalId", "==", text))
             .get()
         )
-        for doc in docs:
-            print(doc.to_dict())
+        student_info = None
+        if docs:
+            student_info = StudentInfo.from_dict(docs[0].to_dict())
+        self.handle_response(student_info)
+
 

@@ -10,7 +10,7 @@ from ui.main.LookupWidget import LookupWidget
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        lookup = LookupWidget()
+        lookup = LookupWidget(self.handle_response)
 
         layout = QVBoxLayout()
         layout.addWidget(lookup)
@@ -25,3 +25,6 @@ class MainWindow(QMainWindow):
         table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
 
         self.resize(800, 500)
+
+    def handle_response(self, student_info):
+        print(student_info)
