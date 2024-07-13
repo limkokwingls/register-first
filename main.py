@@ -7,11 +7,6 @@ from config.firebase import db
 from main_window import MainWindow
 
 
-# docs = (
-#     db.collection("registrations")
-#     .where(filter=FieldFilter("nationalId", "==", "111111"))
-#     .get()
-# )
 
 def main():
     app = QApplication()
