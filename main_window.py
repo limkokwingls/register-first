@@ -4,13 +4,14 @@ from PySide6.QtWidgets import (QMainWindow, QWidgetAction, QToolBar, QVBoxLayout
 from PySide6.QtCore import Qt
 from PySide6.Qt3DCore import QIntList
 
+from ui.form.student_form import StudentForm
 from ui.main.LookupWidget import LookupWidget
 
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        lookup = LookupWidget(self.handle_response)
+        lookup = LookupWidget(handle_response)
 
         layout = QVBoxLayout()
         layout.addWidget(lookup)
@@ -26,5 +27,7 @@ class MainWindow(QMainWindow):
 
         self.resize(800, 500)
 
-    def handle_response(self, student_info):
-        print(student_info)
+
+def handle_response(student_info):
+    form = StudentForm(student_info)
+    form.exec()

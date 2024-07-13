@@ -7,7 +7,6 @@ from config.firebase import db
 from main_window import MainWindow
 
 
-
 def main():
     app = QApplication()
     window = MainWindow()
