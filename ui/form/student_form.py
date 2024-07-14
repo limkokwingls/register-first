@@ -113,10 +113,41 @@ class StudentForm(QDialog):
         self.next_of_kin_relationship.setText(student_info.next_of_kin.relationship)
 
     def save_student_info(self):
-        # Implement the logic to save the student information
-        # You can create a new StudentInfo object with the form data
-        # and emit a signal or call a callback function to handle the saving process
+        student = self.from_form()
+        print(student)
         pass
+
+    def from_form(self) -> StudentInfo:
+        program = Program(
+            name=self.program_name.text(),
+            code=self.program_code.text(),
+            faculty_code=self.faculty_code.text()
+        )
+
+        next_of_kin = NextOfKin(
+            name=self.next_of_kin_name.text(),
+            phone=self.next_of_kin_phone.text(),
+            relationship=self.next_of_kin_relationship.text()
+        )
+
+        return StudentInfo(
+            reference=self.reference.text(),
+            national_id=self.national_id.text(),
+            names=self.names.text(),
+            email=self.email.text(),
+            confirm_email=self.confirm_email.text(),
+            phone1=self.phone1.text(),
+            phone2=self.phone2.text() if self.phone2.text() else None,
+            religion=self.religion.text(),
+            date_of_birth=self.date_of_birth.date().toPython(),
+            gender=self.gender.currentText(),
+            marital_status=self.marital_status.currentText(),
+            birth_place=self.birth_place.text(),
+            home_town=self.home_town.text(),
+            high_school=self.high_school.text(),
+            program=program,
+            next_of_kin=next_of_kin
+        )
 
 # Usage example:
 # student_info = StudentInfo.from_dict(data)  # Assuming you have the data
