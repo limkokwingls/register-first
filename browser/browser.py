@@ -1,5 +1,5 @@
 import logging
-
+from bs4 import Tag, BeautifulSoup
 import requests
 from requests import Response
 from selenium import webdriver
@@ -9,25 +9,38 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.wait import WebDriverWait
 
-# from webdriver_manager.core.driver_cache import DriverCacheManager
-# from webdriver_manager.chrome import ChromeDriverManager
-# from webdriver_manager.firefox import GeckoDriverManager
-
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
 BASE_URL = "https://cmslesothosandbox.limkokwing.net/campus/registry"
 
+def get_form_payload(form: Tag):
+    data = {}
+    inputs = form.select("input")
+    for tag in inputs:
+        if tag.attrs['type'] == 'hidden':
+            data[tag.attrs['name']] = tag.attrs['value']
+    return data
+
+def check_logged_in(html: str) -> bool:
+    page = BeautifulSoup(html, "lxml")
+    form = page.select_one("form")
+    return form is None or form.attrs["action"] != "login.php"
 
 class Browser:
+    _instance = None
     url = f"{BASE_URL}/login.php"
+    logged_in = False
 
-    def __init__(self):
-        self.session = requests.Session()
-        self.session.verify = False
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super(Browser, cls).__new__(cls)
+            cls._instance.session = requests.Session()
+            cls._instance.session.verify = False
+        return cls._instance
 
     def login(self):
         logger.info("Logging in...")
-        # driver_manager = GeckoDriverManager(cache_manager=DriverCacheManager(valid_range=30))
-        # driver = webdriver.Firefox(service=GeckoService(executable_path=driver_manager.install()))
         driver = webdriver.Firefox()
         logger.info(f"Fetching {self.url}...")
         driver.get(self.url)
@@ -36,15 +49,29 @@ class Browser:
         )
         logger.info("Logged in")
 
-        cookies = driver.get_cookies()
+        selenium_cookies = driver.get_cookies()
         driver.quit()
 
-        for cookie in cookies:
-            self.session.cookies.set(cookie["name"], cookie["value"])
+        self.session.cookies.clear()
+        for cookie in selenium_cookies:
+            self.session.cookies.set(cookie["name"], cookie["value"], domain=cookie["domain"])
 
     def fetch(self, url: str) -> Response:
         logger.info(f"Fetching {url}...")
         response = self.session.get(url)
+        is_logged_in = check_logged_in(response.text)
+        if not is_logged_in:
+            logger.info("Not logged in")
+            self.login()
+            response = self.session.get(url)
+            logger.info(f"Logged in, re-fetching {url}...")
         if response.status_code != 200:
-            self.session.cookies = response.cookies
+            logger.warning(f"Unexpected status code: {response.status_code}")
         return response
+
+    def create_student(self, student_info):
+        response = self.fetch(f"{BASE_URL}/r_studentadd.php")
+        page = BeautifulSoup(response.text, "lxml")
+        form = page.select_one("form")
+        payload = get_form_payload(form)
+        print(payload)
