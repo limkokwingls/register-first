@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import (QDialog, QFormLayout, QLineEdit, QDateEdit,
-                               QComboBox, QPushButton, QVBoxLayout, QGroupBox)
+                               QComboBox, QPushButton, QVBoxLayout, QGroupBox, QHBoxLayout, QLabel)
 
 from PySide6.QtCore import QDate
 from model import StudentInfo, Program, NextOfKin
@@ -28,7 +28,7 @@ class StudentForm(QDialog):
         self.gender = QComboBox()
         self.gender.addItems(["Male", "Female", "Other"])
         self.marital_status = QComboBox()
-        self.marital_status.addItems(["Single", "Married", "Divorced", "Widowed"])
+        self.marital_status.addItems(["Single", "Married", "Divorced", "Widowed", "Other"])
         self.birth_place = QLineEdit()
         self.home_town = QLineEdit()
         self.high_school = QLineEdit()
@@ -75,11 +75,13 @@ class StudentForm(QDialog):
         main_layout.addWidget(next_of_kin_group)
 
         # Buttons
-        button_layout = QVBoxLayout()
+        footer = QHBoxLayout()
+        self.status_label = QLabel()
         save_button = QPushButton("Save")
         save_button.clicked.connect(self.save_student_info)
-        button_layout.addWidget(save_button)
-        main_layout.addLayout(button_layout)
+        footer.addWidget(self.status_label, 3)
+        footer.addWidget(save_button, 1)
+        main_layout.addLayout(footer)
 
         self.setLayout(main_layout)
 
