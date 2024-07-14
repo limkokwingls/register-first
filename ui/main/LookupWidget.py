@@ -2,7 +2,7 @@ from typing import Callable
 
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QHBoxLayout, QMessageBox, \
     QSpacerItem, QSizePolicy
-from google.cloud.firestore_v1 import FieldFilter
+from google.cloud.firestore_v1 import FieldFilter, Or
 
 from config.firebase import db
 from model import StudentInfo
@@ -48,11 +48,15 @@ class LookupWidget(QWidget):
 
     def lookup(self):
         self.lookup_button.setDisabled(True)
+        reference_no = self.reference_no.input.text().lower().replace("/", "_")
+        print("Reference", reference_no)
         try:
-            text = self.id_input.input.text()
+            filter_1 = FieldFilter("nationalId", "==", self.id_input.input.text())
+            filter_2 = FieldFilter("reference", "==", reference_no)
+
             docs = (
                 db.collection("registrations")
-                .where(filter=FieldFilter("nationalId", "==", text))
+                .where(filter=Or(filters=[filter_1, filter_2]))
                 .get()
             )
             student_info = None
