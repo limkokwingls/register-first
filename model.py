@@ -21,7 +21,7 @@ class NextOfKin:
 
 @dataclass
 class StudentInfo:
-    reference: str
+    reference: str | None
     national_id: str
     names: str
     email: str

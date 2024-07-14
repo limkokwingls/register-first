@@ -2,6 +2,8 @@ from PySide6.QtWidgets import (QDialog, QFormLayout, QLineEdit, QDateEdit,
                                QComboBox, QPushButton, QVBoxLayout, QGroupBox, QHBoxLayout, QLabel)
 
 from PySide6.QtCore import QDate
+
+from browser import Browser
 from model import StudentInfo, Program, NextOfKin
 
 
@@ -14,8 +16,6 @@ class StudentForm(QDialog):
         main_layout = QVBoxLayout()
         form_layout = QFormLayout()
 
-        # Student Information
-        self.reference = QLineEdit()
         self.national_id = QLineEdit()
         self.names = QLineEdit()
         self.email = QLineEdit()
@@ -33,7 +33,6 @@ class StudentForm(QDialog):
         self.home_town = QLineEdit()
         self.high_school = QLineEdit()
 
-        form_layout.addRow("Reference:", self.reference)
         form_layout.addRow("National ID:", self.national_id)
         form_layout.addRow("Names:", self.names)
         form_layout.addRow("Email:", self.email)
@@ -89,7 +88,6 @@ class StudentForm(QDialog):
             self.populate_form(student_info)
 
     def populate_form(self, student_info: StudentInfo):
-        self.reference.setText(student_info.reference)
         self.national_id.setText(student_info.national_id)
         self.names.setText(student_info.names)
         self.email.setText(student_info.email)
@@ -113,9 +111,15 @@ class StudentForm(QDialog):
         self.next_of_kin_relationship.setText(student_info.next_of_kin.relationship)
 
     def save_student_info(self):
+        self.status_label.setText("Creating student...")
         student = self.from_form()
-        print(student)
-        pass
+        browser = Browser()
+        if browser.create_student(student):
+            self.status_label.setText("Student created successfully!")
+        # student_no = browser.get_student_no(student.national_id, student.names)
+        # browser.enroll_student(student_no, student.program)
+        print("Done!")
+
 
     def from_form(self) -> StudentInfo:
         program = Program(
@@ -131,7 +135,7 @@ class StudentForm(QDialog):
         )
 
         return StudentInfo(
-            reference=self.reference.text(),
+            reference=None,
             national_id=self.national_id.text(),
             names=self.names.text(),
             email=self.email.text(),

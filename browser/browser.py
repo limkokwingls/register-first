@@ -9,10 +9,14 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.wait import WebDriverWait
 
+from model import StudentInfo
+from program_codes import get_program
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 BASE_URL = "https://cmslesothosandbox.limkokwing.net/campus/registry"
+
 
 def get_form_payload(form: Tag):
     data = {}
@@ -22,10 +26,12 @@ def get_form_payload(form: Tag):
             data[tag.attrs['name']] = tag.attrs['value']
     return data
 
+
 def check_logged_in(html: str) -> bool:
     page = BeautifulSoup(html, "lxml")
     form = page.select_one("form")
     return form is None or form.attrs["action"] != "login.php"
+
 
 class Browser:
     _instance = None
@@ -69,9 +75,46 @@ class Browser:
             logger.warning(f"Unexpected status code: {response.status_code}")
         return response
 
-    def create_student(self, student_info):
-        response = self.fetch(f"{BASE_URL}/r_studentadd.php")
+    def post(self, url: str, data: dict) -> Response:
+        logger.info(f"Posting to {url}...")
+        logger.info(f"Data: {data}")
+        response = self.session.post(url, data)
+        is_logged_in = check_logged_in(response.text)
+        if not is_logged_in:
+            logger.info("Not logged in")
+            self.login()
+            response = self.session.post(url, data)
+            logger.info(f"Logged in, re-posting to {url}...")
+        if response.status_code != 200:
+            logger.warning(f"Unexpected status code: {response.status_code}")
+        return response
+
+    def create_student(self, student_info: StudentInfo) -> bool:
+        url = f"{BASE_URL}/r_studentadd.php"
+        response = self.fetch(url)
         page = BeautifulSoup(response.text, "lxml")
         form = page.select_one("form")
-        payload = get_form_payload(form)
-        print(payload)
+        program = get_program(student_info.program.code)
+        payload = get_form_payload(form) | {
+            "x_InstitutionID": '1',
+            "x_OthChgID": 'OthChg0502',
+            "x_IntakeDateCode": "2022-08-22",  #TODO: Change this to 2024-07-22
+            "x_StudentName": student_info.names,
+            "x_StudentNo": student_info.national_id,
+            "x_StudentStatus": "Active",
+            "x_opSchoolID": program["SchoolID"],
+            "x_opProgramID": program["ProgramID"],
+            "x_opTermCode": "2022-08",  #TODO: Change this to 2024-08
+            "x_CountryCode": "LSO",
+            "x_StdContactNo": student_info.phone1,
+            "x_StdContactNo2": student_info.phone2,
+            "x_StdEmail": student_info.email,
+            "btnAction": "Add"
+        }
+        response = self.post(url, payload)
+        if "Successful" in response.text:
+            logger.info("Student created successfully")
+            return True
+        else:
+            logger.error("Failed to create student")
+            return False
