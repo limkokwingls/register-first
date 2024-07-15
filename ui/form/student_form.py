@@ -111,12 +111,13 @@ class StudentForm(QDialog):
         self.next_of_kin_relationship.setText(student_info.next_of_kin.relationship)
 
     def save_student_info(self):
-        self.status_label.setText("Creating student...")
         student = self.from_form()
         browser = Browser()
+        self.status_label.setText("Creating student...")
         std_no = browser.create_student(student)
         if std_no:
-            self.status_label.setText(f"Student created successfully with student no. {std_no}")
+            self.status_label.setText(f"Student created '{std_no}', adding details...")
+            browser.add_student_details(std_no, student)
         # student_no = browser.get_student_no(student.national_id, student.names)
         # browser.enroll_student(student_no, student.program)
         print("Done!")

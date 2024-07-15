@@ -9,7 +9,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.wait import WebDriverWait
 
-from browser.payloads import create_student_payload
+from browser.payloads import create_student_payload, student_details_payload
 from model import StudentInfo
 
 logging.basicConfig(level=logging.INFO)
@@ -120,3 +120,12 @@ class Browser:
         else:
             logger.error("Failed to create student")
             return None
+
+    def add_student_details(self, std_no: str, student_info: StudentInfo):
+        url = f"{BASE_URL}/r_stdpersonallist.php?showmaster=1&x_StudentNo={std_no}"
+        self.fetch(url)
+        response = self.fetch(f"{BASE_URL}/r_stdpersonaladd.php")
+        page = BeautifulSoup(response.text, "lxml")
+        form = page.select_one("form")
+        payload = get_form_payload(form) | student_details_payload(student_info)
+        print(payload)
