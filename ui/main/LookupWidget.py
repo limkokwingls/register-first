@@ -1,3 +1,4 @@
+import logging
 from typing import Callable
 
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QHBoxLayout, QMessageBox, \
@@ -7,6 +8,8 @@ from google.cloud.firestore_v1 import FieldFilter, Or
 from config.firebase import db
 from model import StudentInfo
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class InputField(QWidget):
     def __init__(self, label: str):
@@ -48,10 +51,11 @@ class LookupWidget(QWidget):
 
     def lookup(self):
         self.lookup_button.setDisabled(True)
-        reference_no = self.reference_no.input.text().lower().replace("/", "_")
-        print("Reference", reference_no)
+        reference_no = self.reference_no.input.text().lower().replace("/", "_").strip()
+        national_id = self.id_input.input.text().strip()
+        logger.info(f"Looking up student by national id no. '{national_id}' or reference no. '{reference_no}'")
         try:
-            filter_1 = FieldFilter("nationalId", "==", self.id_input.input.text())
+            filter_1 = FieldFilter("nationalId", "==", national_id)
             filter_2 = FieldFilter("reference", "==", reference_no)
 
             docs = (
@@ -61,9 +65,13 @@ class LookupWidget(QWidget):
             )
             student_info = None
             if docs:
+                logger.info(f"Found {len(docs)} student(s)")
                 student_info = StudentInfo.from_dict(docs[0].to_dict())
+            else:
+                logger.warning("No student found")
             self.handle_response(student_info)
         except Exception as e:
+            logger.error(e)
             QMessageBox.critical(self, "Error", str(e))
         finally:
             self.lookup_button.setDisabled(False)
