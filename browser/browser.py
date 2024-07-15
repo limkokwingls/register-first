@@ -9,6 +9,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.wait import WebDriverWait
 
+from browser.payloads import create_student_payload
 from model import StudentInfo
 from program_codes import get_program
 
@@ -94,23 +95,7 @@ class Browser:
         response = self.fetch(url)
         page = BeautifulSoup(response.text, "lxml")
         form = page.select_one("form")
-        program = get_program(student_info.program.code)
-        payload = get_form_payload(form) | {
-            "x_InstitutionID": '1',
-            "x_OthChgID": 'OthChg0502',
-            "x_IntakeDateCode": "2022-08-22",  #TODO: Change this to 2024-07-22
-            "x_StudentName": student_info.names,
-            "x_StudentNo": student_info.national_id,
-            "x_StudentStatus": "Active",
-            "x_opSchoolID": program["SchoolID"],
-            "x_opProgramID": program["ProgramID"],
-            "x_opTermCode": "2022-08",  #TODO: Change this to 2024-08
-            "x_CountryCode": "LSO",
-            "x_StdContactNo": student_info.phone1,
-            "x_StdContactNo2": student_info.phone2,
-            "x_StdEmail": student_info.email,
-            "btnAction": "Add"
-        }
+        payload = get_form_payload(form) | create_student_payload(student_info)
         response = self.post(url, payload)
         if "Successful" in response.text:
             logger.info("Student created successfully")
