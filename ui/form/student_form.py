@@ -114,12 +114,12 @@ class StudentForm(QDialog):
         self.status_label.setText("Creating student...")
         student = self.from_form()
         browser = Browser()
-        if browser.create_student(student):
-            self.status_label.setText("Student created successfully!")
+        std_no = browser.create_student(student)
+        if std_no:
+            self.status_label.setText(f"Student created successfully with student no. {std_no}")
         # student_no = browser.get_student_no(student.national_id, student.names)
         # browser.enroll_student(student_no, student.program)
         print("Done!")
-
 
     def from_form(self) -> StudentInfo:
         program = Program(

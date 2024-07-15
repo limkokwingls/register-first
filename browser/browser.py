@@ -11,7 +11,6 @@ from selenium.webdriver.support.wait import WebDriverWait
 
 from browser.payloads import create_student_payload
 from model import StudentInfo
-from program_codes import get_program
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -90,8 +89,26 @@ class Browser:
             logger.warning(f"Unexpected status code: {response.status_code}")
         return response
 
-    def create_student(self, student_info: StudentInfo) -> bool:
+    def find_student(self, national_id: str) -> str | None:
+        logger.info(f"Searching for student with national id '{national_id}'")
+        url = (f"{BASE_URL}/r_studentviewlist.php?a_search=E&x_StudentNo={national_id}"
+               f"&z_StudentNo==&Submit=Search")
+        response = self.fetch(url)
+        page = BeautifulSoup(response.text, "lxml")
+        table = page.select_one("table#ewlistmain")
+        std_no = None
+        if table:
+            std_no = table.select_one('tr.ewTableRow td:nth-child(4)').text.strip()
+            logger.info(f"Found student with student no. '{std_no}'")
+        else:
+            logger.warning("Student not found")
+        return std_no
+
+    def create_student(self, student_info: StudentInfo) -> str | None:
         url = f"{BASE_URL}/r_studentadd.php"
+        std_id = self.find_student(student_info.national_id)
+        if std_id:
+            return std_id
         response = self.fetch(url)
         page = BeautifulSoup(response.text, "lxml")
         form = page.select_one("form")
@@ -99,7 +116,7 @@ class Browser:
         response = self.post(url, payload)
         if "Successful" in response.text:
             logger.info("Student created successfully")
-            return True
+            return self.find_student(student_info.national_id)
         else:
             logger.error("Failed to create student")
-            return False
+            return None
