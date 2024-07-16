@@ -11,6 +11,8 @@ from selenium.webdriver.support.wait import WebDriverWait
 
 from browser.payloads import create_student_payload, student_details_payload
 from model import StudentInfo
+from urllib.parse import quote_plus
+
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -89,10 +91,9 @@ class Browser:
             logger.warning(f"Unexpected status code: {response.status_code}")
         return response
 
-    def find_student(self, national_id: str) -> str | None:
+    def find_student(self, national_id: str, names: str) -> str | None:
         logger.info(f"Searching for student with national id '{national_id}'")
-        url = (f"{BASE_URL}/r_studentviewlist.php?a_search=E&x_StudentNo={national_id}"
-               f"&z_StudentNo==&Submit=Search")
+        url = self.get_search_url(names=names, national_id=national_id)
         response = self.fetch(url)
         page = BeautifulSoup(response.text, "lxml")
         table = page.select_one("table#ewlistmain")
@@ -106,7 +107,7 @@ class Browser:
 
     def create_student(self, student_info: StudentInfo) -> str | None:
         url = f"{BASE_URL}/r_studentadd.php"
-        std_id = self.find_student(student_info.national_id)
+        std_id = self.find_student(names=student_info.names, national_id=student_info.national_id)
         if std_id:
             return std_id
         response = self.fetch(url)
@@ -129,3 +130,20 @@ class Browser:
         form = page.select_one("form")
         payload = get_form_payload(form) | student_details_payload(student_info)
         print(payload)
+
+    @staticmethod
+    def get_search_url(names, national_id):
+        base_url = f"{BASE_URL}/r_studentviewlist.php"
+        params = {
+            "a_search": "E",
+            "z_StudentID": "=,,",
+            "x_StudentID": "",
+            "z_StudentName": "LIKE,'%,%'",
+            "x_StudentName": quote_plus(names),
+            "z_StudentNo": "LIKE,'%,%'",
+            "x_StudentNo": national_id,
+            "Submit": "Search"
+        }
+
+        query_string = "&".join(f"{key}={value}" for key, value in params.items())
+        return f"{base_url}?{query_string}"
