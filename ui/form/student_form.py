@@ -1,15 +1,17 @@
 from PySide6.QtWidgets import (QDialog, QFormLayout, QLineEdit, QDateEdit,
                                QComboBox, QPushButton, QVBoxLayout, QGroupBox, QHBoxLayout, QLabel)
-
-from PySide6.QtCore import QDate
+from PySide6.QtCore import QDate, QThread
 
 from browser import Browser
 from model import StudentInfo, Program, NextOfKin
+from ui.form.save_worker import SaveWorker
 
 
 class StudentForm(QDialog):
     def __init__(self, student_info: StudentInfo = None):
         super().__init__()
+        self.worker = None
+        self.thread = None
         self.setWindowTitle("Student Information")
         self.setMinimumWidth(500)
 
@@ -76,10 +78,10 @@ class StudentForm(QDialog):
         # Buttons
         footer = QHBoxLayout()
         self.status_label = QLabel()
-        save_button = QPushButton("Save")
-        save_button.clicked.connect(self.save_student_info)
+        self.save_button = QPushButton("Save")
+        self.save_button.clicked.connect(self.save_student_info)
         footer.addWidget(self.status_label, 3)
-        footer.addWidget(save_button, 1)
+        footer.addWidget(self.save_button, 1)
         main_layout.addLayout(footer)
 
         self.setLayout(main_layout)
@@ -111,16 +113,31 @@ class StudentForm(QDialog):
         self.next_of_kin_relationship.setText(student_info.next_of_kin.relationship)
 
     def save_student_info(self):
+        self.save_button.setEnabled(False)
+
         student = self.from_form()
-        browser = Browser()
-        self.status_label.setText("Creating student...")
-        std_no = browser.create_student(student)
-        if std_no:
-            self.status_label.setText(f"Student created '{std_no}', adding details...")
-            browser.add_student_details(std_no, student)
-        # student_no = browser.get_student_no(student.national_id, student.names)
-        # browser.enroll_student(student_no, student.program)
-        print("Done!")
+        self.worker = SaveWorker(student)
+        self.thread = QThread()
+        self.worker.moveToThread(self.thread)
+
+        self.thread.started.connect(self.worker.save)
+        self.worker.progress.connect(self.update_status)
+        self.worker.finished.connect(self.on_save_finished)
+        self.worker.finished.connect(self.thread.quit)
+        self.worker.finished.connect(self.worker.deleteLater)
+        self.thread.finished.connect(self.thread.deleteLater)
+
+        self.thread.start()
+
+    def update_status(self, message):
+        self.status_label.setText(message)
+
+    def on_save_finished(self, success, message):
+        self.save_button.setEnabled(True)
+        if success:
+            self.status_label.setText(f"Student saved successfully! Student number: {message}")
+        else:
+            self.status_label.setText(f"Error saving student information: {message}")
 
     def from_form(self) -> StudentInfo:
         program = Program(
@@ -153,8 +170,3 @@ class StudentForm(QDialog):
             program=program,
             next_of_kin=next_of_kin
         )
-
-# Usage example:
-# student_info = StudentInfo.from_dict(data)  # Assuming you have the data
-# form = StudentForm(student_info)
-# form.exec_()

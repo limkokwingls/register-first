@@ -108,6 +108,10 @@ class Browser:
             logger.warning("Student not found")
         return std_no
 
+    def check_logged_in(self):
+        url = f"{BASE_URL}/r_studentviewlist.php"
+        self.fetch(url)
+
     def create_student(self, std: StudentInfo) -> str | None:
         url = f"{BASE_URL}/r_studentadd.php"
         std_id = self.find_student(names=std.names, national_id=std.national_id)
