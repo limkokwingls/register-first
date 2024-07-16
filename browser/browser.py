@@ -137,11 +137,12 @@ class Browser:
         form = page.select_one("form")
         payload = get_form_payload(form) | student_details_payload(std_no, student_info)
         response = self.post(f"{BASE_URL}/r_stdpersonaladd.php", payload)
-        print(response.text)
-        # if "Successful" in response.text or "Duplicate value for primary key" in response.text:
-        #     logger.info("Student details added successfully")
-        # else:
-        #     logger.error("Failed to add student details")
+        if "Successful" in response.text or "Duplicate value for primary key" in response.text:
+            logger.info("Student details added successfully")
+            return True
+        else:
+            logger.error("Failed to add student details")
+            return False
 
     @staticmethod
     def get_search_url(names, national_id):
