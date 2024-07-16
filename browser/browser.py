@@ -32,7 +32,10 @@ def get_form_payload(form: Tag):
 def check_logged_in(html: str) -> bool:
     page = BeautifulSoup(html, "lxml")
     form = page.select_one("form")
-    return form is None or form.attrs["action"] != "login.php"
+    if form:
+        if form.attrs.get("action") == "login.php":
+            return False
+    return True
 
 
 class Browser:
@@ -105,19 +108,19 @@ class Browser:
             logger.warning("Student not found")
         return std_no
 
-    def create_student(self, student_info: StudentInfo) -> str | None:
+    def create_student(self, std: StudentInfo) -> str | None:
         url = f"{BASE_URL}/r_studentadd.php"
-        std_id = self.find_student(names=student_info.names, national_id=student_info.national_id)
+        std_id = self.find_student(names=std.names, national_id=std.national_id)
         if std_id:
             return std_id
         response = self.fetch(url)
         page = BeautifulSoup(response.text, "lxml")
         form = page.select_one("form")
-        payload = get_form_payload(form) | create_student_payload(student_info)
+        payload = get_form_payload(form) | create_student_payload(std)
         response = self.post(url, payload)
         if "Successful" in response.text:
             logger.info("Student created successfully")
-            return self.find_student(student_info.national_id)
+            return self.find_student(std.national_id, std.names)
         else:
             logger.error("Failed to create student")
             return None
@@ -128,8 +131,13 @@ class Browser:
         response = self.fetch(f"{BASE_URL}/r_stdpersonaladd.php")
         page = BeautifulSoup(response.text, "lxml")
         form = page.select_one("form")
-        payload = get_form_payload(form) | student_details_payload(student_info)
-        print(payload)
+        payload = get_form_payload(form) | student_details_payload(std_no, student_info)
+        response = self.post(f"{BASE_URL}/r_stdpersonaladd.php", payload)
+        print(response.text)
+        # if "Successful" in response.text or "Duplicate value for primary key" in response.text:
+        #     logger.info("Student details added successfully")
+        # else:
+        #     logger.error("Failed to add student details")
 
     @staticmethod
     def get_search_url(names, national_id):

@@ -25,7 +25,7 @@ def create_student_payload(student_info: StudentInfo) -> dict:
     }
 
 
-def student_details_payload(std: StudentInfo) -> dict:
+def student_details_payload(std_no: str, std: StudentInfo) -> dict:
     date_format = "%Y-%m-%d"
 
     if std.gender.upper() == "MALE":
@@ -51,4 +51,6 @@ def student_details_payload(std: StudentInfo) -> dict:
         "x_Sex": gender,
         "x_MaritalStatus": marital_status,
         "x_CampusCode": "Lesotho",
+        "x_StudentID": std_no,
+        "btnAction": "Add"
     }
