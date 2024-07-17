@@ -1,9 +1,9 @@
+from PySide6.QtCore import QDate, QThread
 from PySide6.QtWidgets import (QDialog, QFormLayout, QLineEdit, QDateEdit,
                                QComboBox, QPushButton, QVBoxLayout, QGroupBox, QHBoxLayout, QLabel)
-from PySide6.QtCore import QDate, QThread
 
-from browser import Browser
 from model import StudentInfo, Program, NextOfKin
+from program_data import get_faculty_codes, get_program_names, get_program_code
 from ui.form.save_worker import SaveWorker
 
 
@@ -52,12 +52,19 @@ class StudentForm(QDialog):
         # Program Information
         program_group = QGroupBox("Program")
         program_layout = QFormLayout()
-        self.program_name = QLineEdit()
+        self.faculty_code = QComboBox()
+        self.faculty_code.addItems(get_faculty_codes())
+        self.faculty_code.currentIndexChanged.connect(self.handle_faculty_change)
+        self.program_name = QComboBox()
+        self.program_name.addItems(get_program_names(self.faculty_code.currentText()))
+        self.program_name.currentIndexChanged.connect(
+            lambda: self.program_code.setText(get_program_code(self.program_name.currentText()))
+        )
         self.program_code = QLineEdit()
-        self.faculty_code = QLineEdit()
+        self.program_code.setReadOnly(True)
+        program_layout.addRow("Faculty Code:", self.faculty_code)
         program_layout.addRow("Name:", self.program_name)
         program_layout.addRow("Code:", self.program_code)
-        program_layout.addRow("Faculty Code:", self.faculty_code)
         program_group.setLayout(program_layout)
 
         # Next of Kin Information
@@ -89,6 +96,10 @@ class StudentForm(QDialog):
         if student_info:
             self.populate_form(student_info)
 
+    def handle_faculty_change(self):
+        self.program_name.clear()
+        self.program_name.addItems(get_program_names(self.faculty_code.currentText()))
+
     def populate_form(self, student_info: StudentInfo):
         self.national_id.setText(student_info.national_id)
         self.names.setText(student_info.names)
@@ -104,9 +115,9 @@ class StudentForm(QDialog):
         self.home_town.setText(student_info.home_town)
         self.high_school.setText(student_info.high_school)
 
-        self.program_name.setText(student_info.program.name)
+        self.faculty_code.setCurrentText(student_info.program.faculty_code)
+        self.program_name.setCurrentText(student_info.program.name)
         self.program_code.setText(student_info.program.code)
-        self.faculty_code.setText(student_info.program.faculty_code)
 
         self.next_of_kin_name.setText(student_info.next_of_kin.name)
         self.next_of_kin_phone.setText(student_info.next_of_kin.phone)
