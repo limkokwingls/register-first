@@ -56,7 +56,7 @@ class Browser:
     def login(self):
         logger.info("Logging in...")
         driver = webdriver.Firefox()
-        logger.info(f"Fetching {self.url}...")
+        logger.info(f"Fetching {self.url}")
         driver.get(self.url)
         WebDriverWait(driver, 60 * 3).until(
             expected_conditions.presence_of_element_located(
@@ -75,28 +75,28 @@ class Browser:
             )
 
     def fetch(self, url: str) -> Response:
-        logger.info(f"Fetching {url}...")
+        logger.info(f"Fetching {url}")
         response = self.session.get(url)
         is_logged_in = check_logged_in(response.text)
         if not is_logged_in:
             logger.info("Not logged in")
             self.login()
+            logger.info(f"Logged in, re-fetching {url}")
             response = self.session.get(url)
-            logger.info(f"Logged in, re-fetching {url}...")
         if response.status_code != 200:
             logger.warning(f"Unexpected status code: {response.status_code}")
         return response
 
     def post(self, url: str, data: dict) -> Response:
-        logger.info(f"Posting to {url}...")
+        logger.info(f"Posting to {url}")
         logger.info(f"Data: {data}")
         response = self.session.post(url, data)
         is_logged_in = check_logged_in(response.text)
         if not is_logged_in:
             logger.info("Not logged in")
             self.login()
+            logger.info(f"Logged in, re-posting to {url}")
             response = self.session.post(url, data)
-            logger.info(f"Logged in, re-posting to {url}...")
         if response.status_code != 200:
             logger.warning(f"Unexpected status code: {response.status_code}")
         return response
