@@ -1,18 +1,18 @@
 import logging
-from bs4 import Tag, BeautifulSoup
+from urllib.parse import quote_plus
+
 import requests
+from bs4 import BeautifulSoup, Tag
 from requests import Response
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service as ChromeService
-from selenium.webdriver.firefox.service import Service as GeckoService
 from selenium.webdriver.common.by import By
+from selenium.webdriver.firefox.service import Service as GeckoService
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.wait import WebDriverWait
 
 from browser.payloads import create_student_payload, student_details_payload
 from model import StudentInfo
-from urllib.parse import quote_plus
-
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -24,8 +24,8 @@ def get_form_payload(form: Tag):
     data = {}
     inputs = form.select("input")
     for tag in inputs:
-        if tag.attrs['type'] == 'hidden':
-            data[tag.attrs['name']] = tag.attrs['value']
+        if tag.attrs["type"] == "hidden":
+            data[tag.attrs["name"]] = tag.attrs["value"]
     return data
 
 
@@ -42,6 +42,7 @@ class Browser:
     _instance = None
     url = f"{BASE_URL}/login.php"
     logged_in = False
+    session: requests.Session | None = None
 
     def __new__(cls):
         if cls._instance is None:
@@ -56,7 +57,9 @@ class Browser:
         logger.info(f"Fetching {self.url}...")
         driver.get(self.url)
         WebDriverWait(driver, 60 * 3).until(
-            expected_conditions.presence_of_element_located((By.LINK_TEXT, "[ Logout ]"))
+            expected_conditions.presence_of_element_located(
+                (By.LINK_TEXT, "[ Logout ]")
+            )
         )
         logger.info("Logged in")
 
@@ -65,7 +68,9 @@ class Browser:
 
         self.session.cookies.clear()
         for cookie in selenium_cookies:
-            self.session.cookies.set(cookie["name"], cookie["value"], domain=cookie["domain"])
+            self.session.cookies.set(
+                cookie["name"], cookie["value"], domain=cookie["domain"]
+            )
 
     def fetch(self, url: str) -> Response:
         logger.info(f"Fetching {url}...")
@@ -102,7 +107,7 @@ class Browser:
         table = page.select_one("table#ewlistmain")
         std_no = None
         if table:
-            std_no = table.select_one('tr.ewTableRow td:nth-child(4)').text.strip()
+            std_no = table.select_one("tr.ewTableRow td:nth-child(4)").text.strip()
             logger.info(f"Found student with student no. '{std_no}'")
         else:
             logger.warning("Student not found")
@@ -137,7 +142,10 @@ class Browser:
         form = page.select_one("form")
         payload = get_form_payload(form) | student_details_payload(std_no, student_info)
         response = self.post(f"{BASE_URL}/r_stdpersonaladd.php", payload)
-        if "Successful" in response.text or "Duplicate value for primary key" in response.text:
+        if (
+            "Successful" in response.text
+            or "Duplicate value for primary key" in response.text
+        ):
             logger.info("Student details added successfully")
             return True
         else:
@@ -155,7 +163,7 @@ class Browser:
             "x_StudentName": quote_plus(names),
             "z_StudentNo": "LIKE,'%,%'",
             "x_StudentNo": national_id,
-            "Submit": "Search"
+            "Submit": "Search",
         }
 
         query_string = "&".join(f"{key}={value}" for key, value in params.items())

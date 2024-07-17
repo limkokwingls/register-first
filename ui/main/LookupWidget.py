@@ -11,6 +11,7 @@ from model import StudentInfo
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 class InputField(QWidget):
     def __init__(self, label: str):
         super().__init__()
