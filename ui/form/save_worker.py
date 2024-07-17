@@ -8,6 +8,7 @@ from browser import Browser
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 class SaveWorker(QObject):
     finished = Signal(bool, str)
     progress = Signal(str)
@@ -32,7 +33,8 @@ class SaveWorker(QObject):
                     self.progress.emit(f"Registering for {self.student.program.name}...")
                     std_program_id = browser.register_program(std_no, self.student.program.code)
                     if std_program_id:
-                        self.progress.emit(f"Enrolling student into {self.student.program.name}...")
+                        self.progress.emit(f"Adding semester...")
+                        browser.add_semester(std_program_id, self.student.program.code)
 
                 self.finished.emit(True, std_no)
             else:

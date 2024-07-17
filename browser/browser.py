@@ -11,7 +11,8 @@ from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.wait import WebDriverWait
 from urllib3.exceptions import InsecureRequestWarning
 
-from browser.payloads import create_student_payload, student_details_payload, register_program_payload
+from browser.payloads import create_student_payload, student_details_payload, register_program_payload, \
+    add_semester_payload
 from model import StudentInfo
 
 logging.basicConfig(level=logging.INFO)
@@ -158,8 +159,7 @@ class Browser:
     def register_program(self, std_no: str, program_code: str) -> int | None:
         logger.info(f"Registering student '{std_no}' into program '{program_code}'")
         url = f"{BASE_URL}/r_stdprogramlist.php?showmaster=1&StudentID={std_no}"
-        response = self.fetch(url)
-        std_program_id = self.read_std_program_id(response, program_code)
+        std_program_id = self.get_id_for(self.fetch(url), program_code)
         if std_program_id:
             logger.info(
                 f"Student already registered into program '{program_code}', student program id: {std_program_id}")
@@ -169,22 +169,55 @@ class Browser:
         form = page.select_one("form")
         payload = get_form_payload(form) | register_program_payload(std_no, program_code)
         response = self.post(f"{BASE_URL}/r_stdprogramadd.php", payload)
-        std_program_id = self.read_std_program_id(response, program_code)
+        std_program_id = self.get_id_for(response, program_code)
         if "Successful" in response.text:
             logger.info(f"Student registered into program successfully, student program id: {std_program_id}")
             return int(std_program_id.strip())
         else:
             logger.error("Failed to register student into program")
 
+    def add_semester(self, std_program_id: int, program_code: str):
+        logger.info(f"Adding semester for student '{std_program_id}'")
+        url = f"{BASE_URL}/r_stdsemesterlist.php?showmaster=1&StdProgramID={std_program_id}"
+        term = "2022-08"  # TODO: Change this to 2024-08, get term from settings
+        std_semester_id = self.get_id_for(self.fetch(url), term)
+        if std_semester_id:
+            logger.info(f"Semester already added, semester id: {std_semester_id}")
+            return int(std_semester_id.strip())
+        response = self.fetch(f"{BASE_URL}/r_stdsemesteradd.php")
+        page = BeautifulSoup(response.text, "lxml")
+        form = page.select_one("form")
+        payload = (get_form_payload(form) |
+                   add_semester_payload(std_program_id=std_program_id, semester_id=self.read_semester_id(form),
+                                        program_code=program_code, term=term))
+        response = self.post(f"{BASE_URL}/r_stdsemesteradd.php", payload)
+        std_semester_id = self.get_id_for(response, term)
+        if "Successful" in response.text:
+            logger.info(f"Semester added successfully, semester id: {std_semester_id}")
+            return int(std_semester_id.strip())
+        else:
+            logger.error("Failed to add semester")
+
     @staticmethod
-    def read_std_program_id(response: requests.Response, program_code: str) -> str:
+    def read_semester_id(form: Tag):
+        sem_options = form.select("#x_SemesterID option")
+        for option in sem_options:
+            option_str = option.get_text(strip=True)
+            if "Year 1 Sem 1" in option_str:
+                return option.attrs['value']
+
+        raise ValueError(
+                f"semester_id cannot be empty was expecting 'Year 1 Sem 1' but not found")
+
+    @staticmethod
+    def get_id_for(response: requests.Response, search_key: str) -> str:
         page = BeautifulSoup(response.text, "lxml")
         table = page.select_one("table#ewlistmain")
         if table:
             rows = table.select("tr.ewTableRow")
             for row in rows:
                 cols = row.select("td")
-                if program_code in cols[0].text.strip():
+                if search_key in cols[0].text.strip():
                     return row.select_one("a").attrs["href"].split("=")[-1]
 
     @staticmethod

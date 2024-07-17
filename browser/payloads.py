@@ -72,5 +72,21 @@ def register_program_payload(std_no: str, program_code: str) -> dict:
     }
 
 
+def add_semester_payload(std_program_id: int, program_code: str, term: str, semester_id: int) -> dict:
+    program = get_program(program_code)
+    return {
+        "x_StdProgramID": std_program_id,
+        "x_SchoolID": program.school_id,
+        "x_ProgramID": program.program_id,
+        "x_TermCode": term,
+        "x_StructureID": program.version,
+        "x_SemesterID": semester_id,
+        "x_CampusCode": "Lesotho",
+        "x_StdSemCAFDate": today(),
+        "x_SemesterStatus": "Active",
+        "btnAction": "Add",
+    }
+
+
 def today() -> str:
     return datetime.date.today().strftime("%Y-%m-%d")
