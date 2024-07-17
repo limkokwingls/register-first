@@ -307,9 +307,9 @@ __data = [
 ]
 
 
-def get_program(self, code: str) -> Program | None:
+def get_program(code: str) -> Program | None:
     return next(
-        (program for program in self.programs if program.code == code), None
+        (program for program in __data if program.code == code), None
     )
 
 

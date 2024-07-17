@@ -21,6 +21,7 @@ class NextOfKin:
 
 @dataclass
 class StudentInfo:
+    std_no: str | None
     reference: str | None
     national_id: str
     names: str
@@ -54,6 +55,7 @@ class StudentInfo:
         date_of_birth: DatetimeWithNanoseconds = data['dateOfBirth']
 
         return cls(
+            std_no=data.get('stdNo'),
             reference=data['reference'],
             national_id=data['nationalId'],
             names=data['names'],

@@ -4,6 +4,8 @@ from datetime import date
 from model import StudentInfo
 from program_data import get_program
 
+date_format = "%Y-%m-%d"
+
 
 def create_student_payload(student_info: StudentInfo) -> dict:
     program = get_program(student_info.program.code)
@@ -26,8 +28,6 @@ def create_student_payload(student_info: StudentInfo) -> dict:
 
 
 def student_details_payload(std_no: str, std: StudentInfo) -> dict:
-    date_format = "%Y-%m-%d"
-
     if std.gender.upper() == "MALE":
         gender = "M"
     elif std.gender.upper() == "FEMALE":
@@ -42,7 +42,7 @@ def student_details_payload(std_no: str, std: StudentInfo) -> dict:
         marital_status = "U"
 
     return {
-        "x_DateApplied": date.today().strftime(date_format),
+        "x_DateApplied": today(),
         "x_BirthDate": std.date_of_birth.strftime(date_format),
         "x_OfferTypeCode": "Full Acceptance",
         "x_ReligionCode": std.religion,
@@ -54,3 +54,23 @@ def student_details_payload(std_no: str, std: StudentInfo) -> dict:
         "x_StudentID": std_no,
         "btnAction": "Add",
     }
+
+
+def register_program_payload(std_no: str, program_code: str) -> dict:
+    program = get_program(program_code)
+    return {
+        "a_add": "A",
+        "x_StudentID": std_no,
+        "x_StdProgRegDate": today(),
+        "x_ProgramID": program.program_id,
+        "x_ProgramIntakeDate": "2022-08-22",  # TODO: Change this to 2024-07-22
+        "x_TermCode": "2022-08",  # TODO: Change this to 2024-08
+        "x_StructureID": program.version,
+        "x_ProgStreamCode": "Normal",
+        "x_ProgramStatus": "Active",
+        "btnAction": "Add",
+    }
+
+
+def today() -> str:
+    return datetime.date.today().strftime("%Y-%m-%d")

@@ -11,7 +11,7 @@ from selenium.webdriver.firefox.service import Service as GeckoService
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.wait import WebDriverWait
 
-from browser.payloads import create_student_payload, student_details_payload
+from browser.payloads import create_student_payload, student_details_payload, register_program_payload
 from model import StudentInfo
 
 logging.basicConfig(level=logging.INFO)
@@ -142,14 +142,27 @@ class Browser:
         form = page.select_one("form")
         payload = get_form_payload(form) | student_details_payload(std_no, student_info)
         response = self.post(f"{BASE_URL}/r_stdpersonaladd.php", payload)
-        if (
-            "Successful" in response.text
-            or "Duplicate value for primary key" in response.text
-        ):
+        if ("Successful" in response.text
+                or "Duplicate value for primary key" in response.text):
             logger.info("Student details added successfully")
             return True
         else:
             logger.error("Failed to add student details")
+            return False
+
+    def register_program(self, std_no: str, program_code: str):
+        url = f"{BASE_URL}/r_stdprogramlist.php?showmaster=1&StudentID={std_no}"
+        self.fetch(url)
+        response = self.fetch(f"{BASE_URL}/r_stdprogramadd.php")
+        page = BeautifulSoup(response.text, "lxml")
+        form = page.select_one("form")
+        payload = get_form_payload(form) | register_program_payload(std_no, program_code)
+        response = self.post(f"{BASE_URL}/r_stdprogramadd.php", payload)
+        if "Successful" in response.text:
+            logger.info("Student registered into program successfully")
+            return True
+        else:
+            logger.error("Failed to register student into program")
             return False
 
     @staticmethod

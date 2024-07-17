@@ -152,9 +152,9 @@ class StudentForm(QDialog):
 
     def from_form(self) -> StudentInfo:
         program = Program(
-            name=self.program_name.text(),
+            name=self.program_name.currentText(),
             code=self.program_code.text(),
-            faculty_code=self.faculty_code.text()
+            faculty_code=self.faculty_code.currentText()
         )
 
         next_of_kin = NextOfKin(
@@ -164,6 +164,7 @@ class StudentForm(QDialog):
         )
 
         return StudentInfo(
+            std_no=None,
             reference=None,
             national_id=self.national_id.text(),
             names=self.names.text(),

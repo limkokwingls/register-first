@@ -21,10 +21,14 @@ class SaveWorker(QObject):
             std_no = browser.create_student(self.student)
 
             if std_no:
-                self.progress.emit(f"Student created! '{std_no}', adding details...")
+                self.progress.emit(f"Adding student details, student number: {std_no}...")
                 success = browser.add_student_details(std_no, self.student)
                 if success:
-                    self.progress.emit(f"Student details added successfully! '{std_no}'")
+                    self.progress.emit(f"Registering program {self.student.program.code}...")
+                    success = browser.register_program(std_no, self.student.program.code)
+                    if success:
+                        self.progress.emit(f"Enrolling student into {self.student.program.code}...")
+
                 self.finished.emit(True, std_no)
             else:
                 self.finished.emit(False, "Failed to create student")
