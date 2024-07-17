@@ -5,9 +5,7 @@ import requests
 from bs4 import BeautifulSoup, Tag
 from requests import Response
 from selenium import webdriver
-from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.common.by import By
-from selenium.webdriver.firefox.service import Service as GeckoService
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.wait import WebDriverWait
 
@@ -118,6 +116,7 @@ class Browser:
         self.fetch(url)
 
     def create_student(self, std: StudentInfo) -> str | None:
+        logger.info("Creating student...")
         url = f"{BASE_URL}/r_studentadd.php"
         std_id = self.find_student(names=std.names, national_id=std.national_id)
         if std_id:
@@ -135,6 +134,7 @@ class Browser:
             return None
 
     def add_student_details(self, std_no: str, student_info: StudentInfo):
+        logger.info(f"Adding student details for '{std_no}'")
         url = f"{BASE_URL}/r_stdpersonallist.php?showmaster=1&x_StudentNo={std_no}"
         self.fetch(url)
         response = self.fetch(f"{BASE_URL}/r_stdpersonaladd.php")
@@ -150,34 +150,37 @@ class Browser:
             logger.error("Failed to add student details")
             return False
 
-    def register_program(self, std_no: str, program_code: str):
+    def register_program(self, std_no: str, program_code: str) -> int | None:
+        logger.info(f"Registering student '{std_no}' into program '{program_code}'")
         url = f"{BASE_URL}/r_stdprogramlist.php?showmaster=1&StudentID={std_no}"
         response = self.fetch(url)
-        page = BeautifulSoup(response.text, "lxml")
-        if self.already_registered(page, program_code):
-            logger.info("Student already registered into program", program_code)
-            return True
+        std_program_id = self.read_std_program_id(response, program_code)
+        if std_program_id:
+            logger.info(
+                f"Student already registered into program '{program_code}', student program id: {std_program_id}")
+            return int(std_program_id.strip())
         response = self.fetch(f"{BASE_URL}/r_stdprogramadd.php")
         page = BeautifulSoup(response.text, "lxml")
         form = page.select_one("form")
         payload = get_form_payload(form) | register_program_payload(std_no, program_code)
         response = self.post(f"{BASE_URL}/r_stdprogramadd.php", payload)
+        std_program_id = self.read_std_program_id(response, program_code)
         if "Successful" in response.text:
-            logger.info("Student registered into program successfully")
-            return True
+            logger.info(f"Student registered into program successfully, student program id: {std_program_id}")
+            return int(std_program_id.strip())
         else:
             logger.error("Failed to register student into program")
-            return False
 
     @staticmethod
-    def already_registered(page: BeautifulSoup, program_code: str) -> bool:
+    def read_std_program_id(response: requests.Response, program_code: str) -> str:
+        page = BeautifulSoup(response.text, "lxml")
         table = page.select_one("table#ewlistmain")
         if table:
             rows = table.select("tr.ewTableRow")
             for row in rows:
                 cols = row.select("td")
                 if program_code in cols[0].text.strip():
-                    return True
+                    return row.select_one("a").attrs["href"].split("=")[-1]
 
     @staticmethod
     def get_search_url(names, national_id):

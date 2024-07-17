@@ -25,8 +25,8 @@ class SaveWorker(QObject):
                 success = browser.add_student_details(std_no, self.student)
                 if success:
                     self.progress.emit(f"Registering program {self.student.program.code}...")
-                    success = browser.register_program(std_no, self.student.program.code)
-                    if success:
+                    std_program_id = browser.register_program(std_no, self.student.program.code)
+                    if std_program_id:
                         self.progress.emit(f"Enrolling student into {self.student.program.code}...")
 
                 self.finished.emit(True, std_no)
