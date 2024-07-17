@@ -2,12 +2,14 @@ import logging
 from urllib.parse import quote_plus
 
 import requests
+import urllib3
 from bs4 import BeautifulSoup, Tag
 from requests import Response
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.wait import WebDriverWait
+from urllib3.exceptions import InsecureRequestWarning
 
 from browser.payloads import create_student_payload, student_details_payload, register_program_payload
 from model import StudentInfo
@@ -16,6 +18,8 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 BASE_URL = "https://cmslesothosandbox.limkokwing.net/campus/registry"
+
+urllib3.disable_warnings(InsecureRequestWarning)
 
 
 def get_form_payload(form: Tag):
