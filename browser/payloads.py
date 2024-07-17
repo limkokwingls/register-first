@@ -72,7 +72,7 @@ def register_program_payload(std_no: str, program_code: str) -> dict:
     }
 
 
-def add_semester_payload(std_program_id: int, program_code: str, term: str, semester_id: int) -> dict:
+def add_semester_payload(std_program_id: int, program_code: str, term: str, semester_id: str) -> dict:
     program = get_program(program_code)
     return {
         "x_StdProgramID": std_program_id,
