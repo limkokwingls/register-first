@@ -152,7 +152,11 @@ class Browser:
 
     def register_program(self, std_no: str, program_code: str):
         url = f"{BASE_URL}/r_stdprogramlist.php?showmaster=1&StudentID={std_no}"
-        self.fetch(url)
+        response = self.fetch(url)
+        page = BeautifulSoup(response.text, "lxml")
+        if self.already_registered(page, program_code):
+            logger.info("Student already registered into program", program_code)
+            return True
         response = self.fetch(f"{BASE_URL}/r_stdprogramadd.php")
         page = BeautifulSoup(response.text, "lxml")
         form = page.select_one("form")
@@ -164,6 +168,16 @@ class Browser:
         else:
             logger.error("Failed to register student into program")
             return False
+
+    @staticmethod
+    def already_registered(page: BeautifulSoup, program_code: str) -> bool:
+        table = page.select_one("table#ewlistmain")
+        if table:
+            rows = table.select("tr.ewTableRow")
+            for row in rows:
+                cols = row.select("td")
+                if program_code in cols[0].text.strip():
+                    return True
 
     @staticmethod
     def get_search_url(names, national_id):
