@@ -16,8 +16,8 @@ def create_student_payload(student_info: StudentInfo) -> dict:
         "x_StudentName": student_info.names,
         "x_StudentNo": student_info.national_id,
         "x_StudentStatus": "Active",
-        "x_opSchoolID": program["SchoolID"],
-        "x_opProgramID": program["ProgramID"],
+        "x_opSchoolID": program.school_id,
+        "x_opProgramID": program.program_id,
         "x_opTermCode": "2022-08",  # TODO: Change this to 2024-08
         "x_CountryCode": "LSO",
         "x_StdContactNo": student_info.phone1,

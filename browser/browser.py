@@ -124,6 +124,7 @@ class Browser:
         url = f"{BASE_URL}/r_studentadd.php"
         std_id = self.find_student(names=std.names, national_id=std.national_id)
         if std_id:
+            logger.info(f"Student already exists, student number: {std_id}")
             return std_id
         response = self.fetch(url)
         page = BeautifulSoup(response.text, "lxml")

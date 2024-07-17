@@ -1,7 +1,12 @@
+import logging
+import traceback
+
 from PySide6.QtCore import QObject, Slot, Signal
 
 from browser import Browser
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class SaveWorker(QObject):
     finished = Signal(bool, str)
@@ -33,4 +38,6 @@ class SaveWorker(QObject):
             else:
                 self.finished.emit(False, "Failed to create student")
         except Exception as e:
+            logger.error(f"Error saving student: {e}")
+            traceback.print_exc()
             self.finished.emit(False, str(e))
