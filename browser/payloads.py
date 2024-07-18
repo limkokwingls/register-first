@@ -88,5 +88,13 @@ def add_semester_payload(std_program_id: int, program_code: str, term: str, seme
     }
 
 
+def add_update_payload(std_no: str) -> dict:
+    return {
+        "a_add": "A",
+        "x_StudentID": std_no,
+        "x_SuppObjectCode": "REG_SEMESTER",
+        "btnAction": "Add",
+    }
+
 def today() -> str:
     return datetime.date.today().strftime("%Y-%m-%d")

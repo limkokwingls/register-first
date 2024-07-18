@@ -12,7 +12,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 from urllib3.exceptions import InsecureRequestWarning
 
 from browser.payloads import create_student_payload, student_details_payload, register_program_payload, \
-    add_semester_payload
+    add_semester_payload, add_update_payload
 from model import StudentInfo
 
 logging.basicConfig(level=logging.INFO)
@@ -205,7 +205,7 @@ class Browser:
         page = BeautifulSoup(add_response.text, "lxml")
         checkboxes = page.find_all('input', type='checkbox')
 
-        payload = {}
+        modules = []
         year1_sem1 = False
         for i, checkbox in enumerate(checkboxes):
             parent_tr = checkbox.find_parent('tr')
@@ -220,18 +220,23 @@ class Browser:
             is_blue = parent_tr and 'phpmaker1' in parent_tr.get('class', [])
 
             if year1_sem1 and not is_disabled and is_blue:
-                payload.update({checkbox['name']: checkbox['value']})
-                print(f"Selected checkbox {i} for registration")
+                modules.append(checkbox.attrs['value'])
 
-        payload = payload | {
+        payload = get_form_payload(page) | {
             "Submit": "Add+Modules",
+            "take[]": modules
         }
         hidden_inputs = page.find_all('input', type='hidden')
         for hidden in hidden_inputs:
             payload.update({hidden['name']: hidden['value']})
 
-        response = self.post(f"{BASE_URL}/r_stdmoduleadd1.php", payload)
-        print(response.text)
+        self.post(f"{BASE_URL}/r_stdmoduleadd1.php", payload)
+
+    def add_update(self, std_no: str):
+        page = BeautifulSoup(self.fetch(f"{BASE_URL}/s_updateadd.php").text, "lxml")
+        form = page.select_one("form")
+        payload = get_form_payload(form) | add_update_payload(std_no)
+        self.post(f"{BASE_URL}/s_updateadd.php", payload)
 
     @staticmethod
     def read_semester_id(form: Tag):

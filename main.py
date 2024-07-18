@@ -15,7 +15,7 @@ def main():
     # app.exec()
 
     browser = Browser()
-    browser.add_modules(97067)
+    browser.add_update("901016955")
 
 
 if __name__ == "__main__":
