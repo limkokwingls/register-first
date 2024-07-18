@@ -88,7 +88,7 @@ class Browser:
             logger.warning(f"Unexpected status code: {response.status_code}")
         return response
 
-    def post(self, url: str, data: dict) -> Response:
+    def post(self, url: str, data: dict | str) -> Response:
         logger.info(f"Posting to {url}")
         logger.info(f"Data: {data}")
         response = self.session.post(url, data)
@@ -198,6 +198,41 @@ class Browser:
         else:
             logger.error("Failed to add semester")
 
+    def add_modules(self, std_semester_id: int):
+        url = f"{BASE_URL}/r_stdmodulelist.php?showmaster=1&StdSemesterID={std_semester_id}"
+        self.fetch(url)
+        add_response = self.fetch(f"{BASE_URL}/r_stdmoduleadd1.php")
+        page = BeautifulSoup(add_response.text, "lxml")
+        checkboxes = page.find_all('input', type='checkbox')
+
+        payload = {}
+        year1_sem1 = False
+        for i, checkbox in enumerate(checkboxes):
+            parent_tr = checkbox.find_parent('tr')
+            if parent_tr:
+                prev_td = parent_tr.find_previous('td', class_='phpmaker')
+                if prev_td and 'Year 1 Sem 1' in prev_td.text:
+                    year1_sem1 = True
+                elif prev_td and 'Year 1 Sem 2' in prev_td.text:
+                    year1_sem1 = False
+
+            is_disabled = 'disabled' in checkbox.attrs
+            is_blue = parent_tr and 'phpmaker1' in parent_tr.get('class', [])
+
+            if year1_sem1 and not is_disabled and is_blue:
+                payload.update({checkbox['name']: checkbox['value']})
+                print(f"Selected checkbox {i} for registration")
+
+        payload = payload | {
+            "Submit": "Add+Modules",
+        }
+        hidden_inputs = page.find_all('input', type='hidden')
+        for hidden in hidden_inputs:
+            payload.update({hidden['name']: hidden['value']})
+
+        response = self.post(f"{BASE_URL}/r_stdmoduleadd1.php", payload)
+        print(response.text)
+
     @staticmethod
     def read_semester_id(form: Tag):
         sem_options = form.select("#x_SemesterID option")
@@ -207,7 +242,7 @@ class Browser:
                 return option.attrs['value']
 
         raise ValueError(
-                f"semester_id cannot be empty was expecting 'Year 1 Sem 1' but not found")
+            f"semester_id cannot be empty was expecting 'Year 1 Sem 1' but not found")
 
     @staticmethod
     def get_id_for(response: requests.Response, search_key: str) -> str:
