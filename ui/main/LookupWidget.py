@@ -2,7 +2,7 @@ import logging
 from typing import Callable
 
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QHBoxLayout, QMessageBox, \
-    QSpacerItem, QSizePolicy
+    QSpacerItem
 from google.cloud.firestore_v1 import FieldFilter, Or
 
 from config.firebase import db
