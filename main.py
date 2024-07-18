@@ -9,13 +9,10 @@ from main_window import MainWindow
 
 
 def main():
-    # app = QApplication()
-    # window = MainWindow()
-    # window.show()
-    # app.exec()
-
-    browser = Browser()
-    browser.add_update("901016955")
+    app = QApplication()
+    window = MainWindow()
+    window.show()
+    app.exec()
 
 
 if __name__ == "__main__":

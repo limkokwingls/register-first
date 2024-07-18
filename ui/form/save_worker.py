@@ -34,7 +34,15 @@ class SaveWorker(QObject):
                     std_program_id = browser.register_program(std_no, self.student.program.code)
                     if std_program_id:
                         self.progress.emit(f"Adding semester...")
-                        browser.add_semester(std_program_id, self.student.program.code)
+                        std_semester_id = browser.add_semester(std_program_id, self.student.program.code)
+                        if std_semester_id:
+                            self.progress.emit("Adding modules...")
+                            browser.add_modules(std_semester_id)
+                            self.progress.emit("Updating semester registration...")
+                            browser.add_update(std_no)
+                        else:
+                            self.progress.emit("Failed to add semester")
+
 
                 self.finished.emit(True, std_no)
             else:
