@@ -21,6 +21,7 @@ class NextOfKin:
 
 @dataclass
 class StudentInfo:
+    doc_id: str | None
     std_no: str | None
     reference: str | None
     national_id: str
@@ -40,7 +41,7 @@ class StudentInfo:
     next_of_kin: NextOfKin
 
     @classmethod
-    def from_dict(cls, data):
+    def from_dict(cls, data, doc_id):
         program = Program(
             name=data['program']['name'],
             code=data['program']['code'],
@@ -55,6 +56,7 @@ class StudentInfo:
         date_of_birth: DatetimeWithNanoseconds = data['dateOfBirth']
 
         return cls(
+            doc_id=doc_id,
             std_no=data.get('stdNo'),
             reference=data['reference'],
             national_id=data['nationalId'],

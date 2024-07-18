@@ -69,7 +69,7 @@ class LookupWidget(QWidget):
             student_info = None
             if docs:
                 logger.info(f"Found {len(docs)} student(s)")
-                student_info = StudentInfo.from_dict(docs[0].to_dict())
+                student_info = StudentInfo.from_dict(docs[0].to_dict(), docs[0].id)
             else:
                 logger.warning("No student found")
             self.handle_response(student_info)

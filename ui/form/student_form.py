@@ -10,6 +10,7 @@ from ui.form.save_worker import SaveWorker
 class StudentForm(QDialog):
     def __init__(self, student_info: StudentInfo = None):
         super().__init__()
+        self.doc_id = student_info.doc_id
         self.worker = None
         self.thread = None
         self.setWindowTitle("Student Information")
@@ -176,6 +177,7 @@ class StudentForm(QDialog):
         )
 
         return StudentInfo(
+            doc_id=self.doc_id,
             std_no=None,
             reference=None,
             national_id=self.national_id.text(),
