@@ -11,7 +11,8 @@ logger = logging.getLogger(__name__)
 
 class SaveWorker(QObject):
     finished = Signal(bool, str)
-    progress = Signal(str)
+    message = Signal(str)
+    progress = Signal(int)
 
     def __init__(self, student):
         super().__init__()
@@ -20,29 +21,36 @@ class SaveWorker(QObject):
     @Slot()
     def save(self):
         try:
-            self.progress.emit("Initializing...")
+            self.progress.emit(0)
+            self.message.emit("Initializing...")
             browser = Browser()
             browser.check_logged_in()
-            self.progress.emit("Creating student...")
+            self.message.emit("Creating student...")
+            self.progress.emit(2)
             std_no = browser.create_student(self.student)
 
             if std_no:
-                self.progress.emit(f"Adding student details, student number: {std_no}...")
+                self.progress.emit(3)
+                self.message.emit(f"Adding student details, student number: {std_no}...")
                 success = browser.add_student_details(std_no, self.student)
                 if success:
-                    self.progress.emit(f"Registering for {self.student.program.name}...")
+                    self.progress.emit(4)
+                    self.message.emit(f"Registering for {self.student.program.name}...")
                     std_program_id = browser.register_program(std_no, self.student.program.code)
                     if std_program_id:
-                        self.progress.emit(f"Adding semester...")
+                        self.progress.emit(5)
+                        self.message.emit(f"Adding semester...")
                         std_semester_id = browser.add_semester(std_program_id, self.student.program.code)
                         if std_semester_id:
-                            self.progress.emit("Adding modules...")
+                            self.progress.emit(6)
+                            self.message.emit("Adding modules...")
                             browser.add_modules(std_semester_id)
-                            self.progress.emit("Updating semester registration...")
+                            self.progress.emit(7)
+                            self.message.emit("Updating semester registration...")
                             browser.add_update(std_no)
+                            self.progress.emit(8)
                         else:
-                            self.progress.emit("Failed to add semester")
-
+                            self.message.emit("Failed to add semester")
 
                 self.finished.emit(True, std_no)
             else:

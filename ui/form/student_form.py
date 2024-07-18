@@ -1,6 +1,6 @@
 from PySide6.QtCore import QDate, QThread
 from PySide6.QtWidgets import (QDialog, QFormLayout, QLineEdit, QDateEdit,
-                               QComboBox, QPushButton, QVBoxLayout, QGroupBox, QHBoxLayout, QLabel)
+                               QComboBox, QPushButton, QVBoxLayout, QGroupBox, QHBoxLayout, QLabel, QProgressBar)
 
 from model import StudentInfo, Program, NextOfKin
 from program_data import get_faculty_codes, get_program_names, get_program_code
@@ -34,6 +34,7 @@ class StudentForm(QDialog):
         self.birth_place = QLineEdit()
         self.home_town = QLineEdit()
         self.high_school = QLineEdit()
+        self.progress_bar = QProgressBar()
 
         form_layout.addRow("National ID:", self.national_id)
         form_layout.addRow("Names:", self.names)
@@ -81,6 +82,8 @@ class StudentForm(QDialog):
         main_layout.addLayout(form_layout)
         main_layout.addWidget(program_group)
         main_layout.addWidget(next_of_kin_group)
+
+        main_layout.addWidget(self.progress_bar)
 
         # Buttons
         footer = QHBoxLayout()
@@ -132,9 +135,11 @@ class StudentForm(QDialog):
         self.worker.moveToThread(self.thread)
 
         self.thread.started.connect(self.worker.save)
-        self.worker.progress.connect(self.update_status)
+        self.worker.message.connect(self.update_status)
+        self.worker.progress.connect(self.on_progress)
         self.worker.finished.connect(self.on_save_finished)
         self.worker.finished.connect(self.thread.quit)
+
         self.worker.finished.connect(self.worker.deleteLater)
         self.thread.finished.connect(self.thread.deleteLater)
 
@@ -142,6 +147,13 @@ class StudentForm(QDialog):
 
     def update_status(self, message):
         self.status_label.setText(message)
+
+    def on_progress(self, value: int):
+        self.progress_bar.setValue(value)
+        if value > 0:
+            self.progress_bar.setRange(0, 8)
+        else:
+            self.progress_bar.setRange(0, 0)
 
     def on_save_finished(self, success, message):
         self.save_button.setEnabled(True)
