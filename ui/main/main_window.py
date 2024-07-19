@@ -73,7 +73,6 @@ class MainWindow(QMainWindow):
         aggregate_query.count(alias="count")
 
         count = aggregate_query.get()[0][0]
-        # students_count = len(students_ref.get())
         self.total_label.setText(f"Registered Students: {count.value}")
 
 

@@ -1,10 +1,12 @@
 from PySide6.QtCore import QDate, QThread
 from PySide6.QtWidgets import (QDialog, QFormLayout, QLineEdit, QDateEdit,
-                               QComboBox, QPushButton, QVBoxLayout, QGroupBox, QHBoxLayout, QLabel, QProgressBar)
+                               QComboBox, QPushButton, QVBoxLayout, QGroupBox, QHBoxLayout, QLabel, QProgressBar,
+                               QMessageBox)
 
 from model import StudentInfo, Program, NextOfKin
 from program_data import get_faculty_codes, get_program_names, get_program_code
 from ui.form.save_worker import SaveWorker
+import pyperclip
 
 
 class StudentForm(QDialog):
@@ -159,7 +161,9 @@ class StudentForm(QDialog):
     def on_save_finished(self, success, message):
         self.save_button.setEnabled(True)
         if success:
-            self.status_label.setText(f"Student saved successfully! Student number: {message}")
+            QMessageBox.information(self, "Success", f"Student registration successful!\nStudent No: {message}")
+            pyperclip.copy(message)
+            self.close()
         else:
             self.status_label.setText(f"Error saving student information: {message}")
 
