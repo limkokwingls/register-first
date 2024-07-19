@@ -61,7 +61,7 @@ class MainWindow(QMainWindow):
             self.table.setItem(row, 0, QTableWidgetItem(str(student.get('stdNo', ''))))
             self.table.setItem(row, 1, QTableWidgetItem(student.get('names', '')))
             self.table.setItem(row, 2, QTableWidgetItem(student.get('nationalId', '')))
-            self.table.setItem(row, 3, QTableWidgetItem(student.get('program.name', '')))
+            self.table.setItem(row, 3, QTableWidgetItem(student.get('program', '').get('name')))
 
         self.update_total_students()
 
