@@ -1,7 +1,7 @@
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import (QMainWindow, QVBoxLayout, QWidget, QTableWidget, QHeaderView,
-                               QTableWidgetItem)  # Add QTableWidgetItem here
-from google.cloud.firestore_v1 import FieldFilter
+                               QTableWidgetItem, QLabel)
+from google.cloud.firestore_v1 import FieldFilter, aggregation
 
 from config.firebase import db
 from ui.form.student_form import StudentForm
@@ -28,14 +28,19 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(central)
         self.table = QTableWidget()
         self.table.setColumnCount(4)
+        self.total_label = QLabel("Registered Students: ?")
         self.table.setHorizontalHeaderLabels(["Student No.", "Name", "National ID", "Program"])
+        layout.addWidget(self.total_label)
         layout.addWidget(self.table)
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
 
-        self.resize(800, 500)
+        self.resize(980, 600)
 
         # Set up Firestore listener
         self.setup_firestore_listener()
+
+        # Fetch and display total students count
+        self.update_total_students()
 
     def setup_firestore_listener(self):
         students_ref = db.collection('registrations').where(filter=FieldFilter(
@@ -57,6 +62,19 @@ class MainWindow(QMainWindow):
             self.table.setItem(row, 1, QTableWidgetItem(student.get('names', '')))
             self.table.setItem(row, 2, QTableWidgetItem(student.get('nationalId', '')))
             self.table.setItem(row, 3, QTableWidgetItem(student.get('program.name', '')))
+
+        self.update_total_students()
+
+    def update_total_students(self):
+        query = db.collection('registrations').where(filter=FieldFilter(
+            field_path='stdNo', op_string='>', value=0
+        ))
+        aggregate_query = aggregation.AggregationQuery(query)
+        aggregate_query.count(alias="count")
+
+        count = aggregate_query.get()[0][0]
+        # students_count = len(students_ref.get())
+        self.total_label.setText(f"Registered Students: {count.value}")
 
 
 def handle_response(student_info):
