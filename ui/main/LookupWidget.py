@@ -13,11 +13,11 @@ logger = logging.getLogger(__name__)
 
 
 class InputField(QWidget):
-    def __init__(self, label: str):
+    def __init__(self, label: str, value: str = ""):
         super().__init__()
         self.setLayout(QVBoxLayout())
         self.label = QLabel(label)
-        self.input = QLineEdit()
+        self.input = QLineEdit(value)
         self.layout().addWidget(self.label)
         self.layout().addWidget(self.input)
 
@@ -29,7 +29,7 @@ class LookupWidget(QWidget):
         self.id_input = InputField("National Id")
         self.id_input.input.textChanged.connect(self.enable_lookup)
         self.id_input.input.returnPressed.connect(self.enable_lookup)
-        self.reference_no = InputField("Reference No.")
+        self.reference_no = InputField("Reference No.", "LUCT/")
         self.reference_no.input.textChanged.connect(self.enable_lookup)
         self.reference_no.input.returnPressed.connect(self.enable_lookup)
         self.lookup_button = QPushButton("Look Up")
@@ -54,7 +54,7 @@ class LookupWidget(QWidget):
 
     def lookup(self):
         self.lookup_button.setDisabled(True)
-        reference_no = self.reference_no.input.text().lower().replace("/", "_").strip()
+        reference_no = self.reference_no.input.text().lower().replace("/", "-").strip()
         national_id = self.id_input.input.text().strip()
         logger.info(f"Looking up student by national id no. '{national_id}' or reference no. '{reference_no}'")
         try:
