@@ -51,7 +51,7 @@ class MainWindow(QMainWindow):
     def setup_firestore_listener(self):
         students_ref = db.collection('registrations').where(filter=FieldFilter(
             field_path='stdNo', op_string='>', value=0
-        )).order_by("createdAt")
+        )).limit(20).order_by("stdNo")
         students_ref.on_snapshot(self.on_snapshot)
 
     def on_snapshot(self, doc_snapshot, changes, read_time):
@@ -62,6 +62,8 @@ class MainWindow(QMainWindow):
         self.firestore_signals.dataChanged.emit(students)
 
     def update_table(self, students):
+        # order by stdNo descending
+        students.sort(key=lambda x: x.get('stdNo', 0), reverse=True)
         self.table.setRowCount(len(students))
         for row, student in enumerate(students):
             self.table.setItem(row, 0, QTableWidgetItem(str(student.get('stdNo', ''))))
