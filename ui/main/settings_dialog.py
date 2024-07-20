@@ -1,12 +1,14 @@
-from PySide6.QtCore import QSettings, QDate
+from PySide6.QtCore import QObject, QSettings, QDate
 from PySide6.QtWidgets import (QVBoxLayout, QDialog, QLineEdit,
                                QPushButton, QFormLayout, QMessageBox, QDateEdit)
+
+from ui.main.settings import Settings
 
 
 class SettingsDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.settings = QSettings("limkokwing", "register-first")
+        self.settings = Settings()
         self.setWindowTitle("Settings")
         layout = QFormLayout(self)
 
@@ -26,18 +28,18 @@ class SettingsDialog(QDialog):
         layout.addRow(buttons)
 
         # Load current settings
-        self.term_input.setText(str(self.settings.value("term", "")))
-        saved_date = self.settings.value("intake_date", QDate.currentDate())
-        if isinstance(saved_date, str):
-            saved_date = QDate.fromString(saved_date, "yyyy-MM-dd")
-        self.intake_date_input.setDate(saved_date)
+        self.term_input.setText(self.settings.term)
+        self.intake_date_input.setDate(self.settings.intake_date)
 
     def save_settings(self):
         new_term = self.term_input.text()
-        new_intake_date = self.intake_date_input.date().toString("yyyy-MM-dd")
+        new_intake_date = self.intake_date_input.date()
 
-        print(new_term, new_intake_date)
-
-        self.settings.setValue("term", new_term)
-        self.settings.setValue("intake_date", new_intake_date)
+        self.settings.term = new_term
+        self.settings.intake_date = new_intake_date
         self.accept()
+
+# Example usage in other parts of your application:
+# settings_manager = SettingsManager()
+# current_term = settings_manager.term
+# current_intake_date = settings_manager.intake_date
