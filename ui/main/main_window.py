@@ -1,6 +1,7 @@
 from PySide6.QtCore import QObject, Signal
+from PySide6.QtGui import QAction
 from PySide6.QtWidgets import (QMainWindow, QVBoxLayout, QWidget, QTableWidget, QHeaderView,
-                               QTableWidgetItem, QLabel)
+                               QTableWidgetItem, QLabel, QToolBar)
 from google.cloud.firestore_v1 import FieldFilter, aggregation
 
 from config.firebase import db
@@ -17,6 +18,14 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.firestore_signals = FirestoreSignals()
         self.firestore_signals.dataChanged.connect(self.update_table)
+
+        menu = self.menuBar()
+        file_menu = menu.addMenu("&File")
+        new_action = QAction("New", self)
+        new_action.setShortcut("Ctrl+N")
+        new_action.triggered.connect(lambda: handle_response(None))
+        file_menu.addAction(new_action)
+        menu.addMenu(file_menu)
 
         lookup = LookupWidget(handle_response)
 
@@ -36,10 +45,7 @@ class MainWindow(QMainWindow):
 
         self.resize(980, 600)
 
-        # Set up Firestore listener
         self.setup_firestore_listener()
-
-        # Fetch and display total students count
         self.update_total_students()
 
     def setup_firestore_listener(self):

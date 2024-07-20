@@ -12,7 +12,7 @@ import pyperclip
 class StudentForm(QDialog):
     def __init__(self, student_info: StudentInfo = None):
         super().__init__()
-        self.doc_id = student_info.doc_id
+        self.doc_id = student_info.doc_id if student_info else None
         self.worker = None
         self.thread = None
         self.setWindowTitle("Student Information")

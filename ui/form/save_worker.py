@@ -4,7 +4,8 @@ import traceback
 from PySide6.QtCore import QObject, Slot, Signal
 
 from browser import Browser
-from service import save_student_number
+from model import StudentInfo
+from service import save_to_firestore
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -15,7 +16,7 @@ class SaveWorker(QObject):
     message = Signal(str)
     progress = Signal(int)
 
-    def __init__(self, student):
+    def __init__(self, student: StudentInfo):
         super().__init__()
         self.student = student
 
@@ -51,7 +52,7 @@ class SaveWorker(QObject):
                             browser.add_update(std_no)
                             self.progress.emit(7)
                             self.message.emit("Updating database...")
-                            save_student_number(doc_id=self.student.doc_id, std_num=std_no)
+                            save_to_firestore(doc_id=self.student.doc_id, std_num=std_no, std=self.student)
                             self.progress.emit(8)
                         else:
                             self.message.emit("Failed to add semester")

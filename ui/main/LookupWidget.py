@@ -37,7 +37,7 @@ class LookupWidget(QWidget):
         self.lookup_button = QPushButton("Look Up")
         self.lookup_button.setDisabled(True)
         self.lookup_button.clicked.connect(self.lookup)
-        self.lookup_button.setMinimumSize(100, 30)
+        self.lookup_button.setMaximumSize(100, 30)
         button_layout = QVBoxLayout()
         button_layout.addItem(QSpacerItem(0, 20))
         button_layout.addWidget(self.lookup_button)

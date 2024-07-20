@@ -75,3 +75,32 @@ class StudentInfo:
             program=program,
             next_of_kin=next_of_kin
         )
+
+    def to_dict(self):
+        return {
+            "stdNo": self.std_no,
+            "reference": self.reference,
+            "nationalId": self.national_id,
+            "names": self.names,
+            "email": self.email,
+            "confirmEmail": self.confirm_email,
+            "phone1": self.phone1,
+            "phone2": self.phone2,
+            "religion": self.religion,
+            "dateOfBirth": self.date_of_birth.isoformat(),
+            "gender": self.gender,
+            "maritalStatus": self.marital_status,
+            "birthPlace": self.birth_place,
+            "homeTown": self.home_town,
+            "highSchool": self.high_school,
+            "program": {
+                "name": self.program.name,
+                "code": self.program.code,
+                "facultyCode": self.program.faculty_code
+            },
+            "nextOfKin": {
+                "names": self.next_of_kin.name,
+                "phone": self.next_of_kin.phone,
+                "relationship": self.next_of_kin.relationship
+            }
+        }
