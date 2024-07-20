@@ -7,6 +7,7 @@ from google.cloud.firestore_v1 import FieldFilter, aggregation
 from config.firebase import db
 from ui.form.student_form import StudentForm
 from ui.main.LookupWidget import LookupWidget
+from ui.main.settings_dialog import SettingsDialog
 
 
 class FirestoreSignals(QObject):
@@ -43,10 +44,18 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.table)
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
 
+        settings_action = QAction("Settings", self)
+        settings_action.triggered.connect(self.open_settings_dialog)
+        file_menu.addAction(settings_action)
+
         self.resize(980, 600)
 
         self.setup_firestore_listener()
         self.update_total_students()
+
+    def open_settings_dialog(self):
+        dialog = SettingsDialog(self)
+        dialog.exec()
 
     def setup_firestore_listener(self):
         students_ref = db.collection('registrations').where(filter=FieldFilter(
