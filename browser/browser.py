@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 settings = Settings()
 
-BASE_URL = f"{settings.base_url}/campus/registry"
+BASE_URL = f"{settings.base_url}campus/registry"
 
 urllib3.disable_warnings(InsecureRequestWarning)
 
