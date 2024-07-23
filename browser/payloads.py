@@ -57,6 +57,9 @@ def student_details_payload(std_no: str, std: StudentInfo) -> dict:
         "x_MaritalStatus": marital_status,
         "x_CampusCode": "Lesotho",
         "x_StudentID": std_no,
+        "x_EmergencyRelation": std.next_of_kin.relationship,
+        "x_EmergencyContact": std.next_of_kin.name,
+        "x_EmergencyNo": std.next_of_kin.phone,
         "btnAction": "Add",
     }
 
