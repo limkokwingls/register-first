@@ -24,7 +24,6 @@ class StudentForm(QDialog):
         self.national_id = QLineEdit()
         self.names = QLineEdit()
         self.email = QLineEdit()
-        self.confirm_email = QLineEdit()
         self.phone1 = QLineEdit()
         self.phone2 = QLineEdit()
         self.religion = QLineEdit()
@@ -42,7 +41,6 @@ class StudentForm(QDialog):
         form_layout.addRow("National ID:", self.national_id)
         form_layout.addRow("Names:", self.names)
         form_layout.addRow("Email:", self.email)
-        form_layout.addRow("Confirm Email:", self.confirm_email)
         form_layout.addRow("Phone 1:", self.phone1)
         form_layout.addRow("Phone 2:", self.phone2)
         form_layout.addRow("Religion:", self.religion)
@@ -108,25 +106,24 @@ class StudentForm(QDialog):
 
     def populate_form(self, student_info: StudentInfo):
         self.national_id.setText(student_info.national_id)
-        self.names.setText(student_info.names)
-        self.email.setText(student_info.email)
-        self.confirm_email.setText(student_info.confirm_email)
-        self.phone1.setText(student_info.phone1)
-        self.phone2.setText(student_info.phone2 or "")
+        self.names.setText(format_name(student_info.names))
+        self.email.setText(student_info.email.lower())
+        self.phone1.setText(format_phone(student_info.phone1))
+        self.phone2.setText(format_phone(student_info.phone2))
         self.religion.setText(student_info.religion)
         self.date_of_birth.setDate(QDate(student_info.date_of_birth))
         self.gender.setCurrentText(student_info.gender)
         self.marital_status.setCurrentText(student_info.marital_status)
-        self.birth_place.setText(student_info.birth_place)
-        self.home_town.setText(student_info.home_town)
-        self.high_school.setText(student_info.high_school)
+        self.birth_place.setText(format_place(student_info.birth_place))
+        self.home_town.setText(format_place(student_info.home_town))
+        self.high_school.setText(format_place(student_info.high_school))
 
         self.faculty_code.setCurrentText(student_info.program.faculty_code)
         self.program_name.setCurrentText(student_info.program.name)
         self.program_code.setText(student_info.program.code)
 
-        self.next_of_kin_name.setText(student_info.next_of_kin.name)
-        self.next_of_kin_phone.setText(student_info.next_of_kin.phone)
+        self.next_of_kin_name.setText(format_name(student_info.next_of_kin.name))
+        self.next_of_kin_phone.setText(format_phone(student_info.next_of_kin.phone))
         self.next_of_kin_relationship.setText(student_info.next_of_kin.relationship)
 
     def save_student_info(self):
@@ -187,7 +184,6 @@ class StudentForm(QDialog):
             national_id=self.national_id.text(),
             names=self.names.text(),
             email=self.email.text(),
-            confirm_email=self.confirm_email.text(),
             phone1=self.phone1.text(),
             phone2=self.phone2.text() if self.phone2.text() else None,
             religion=self.religion.text(),
@@ -200,3 +196,32 @@ class StudentForm(QDialog):
             program=program,
             next_of_kin=next_of_kin
         )
+
+
+def format_place(name: str | None) -> str | None:
+    if not name:
+        return None
+    parts = name.split()
+    for i, part in enumerate(parts):
+        if part.lower() in ["of", "the", "and", "at", "in", "on", "for", "to", "by", "with", "from"]:
+            parts[i] = part.lower()
+        elif "." in part:
+            parts[i] = part
+        else:
+            parts[i] = part.capitalize()
+    return " ".join(parts)
+
+
+def format_phone(phone: str | None) -> str:
+    if not phone:
+        return ""
+    phone = phone.replace(" ", "")
+    if len(phone) == 8:
+        return f"+266{phone}"
+    return phone
+
+
+def format_name(name: str | None) -> str | None:
+    if not name:
+        return None
+    return " ".join([part.capitalize() for part in name.split()])

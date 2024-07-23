@@ -27,7 +27,6 @@ class StudentInfo:
     national_id: str
     names: str
     email: str
-    confirm_email: str
     phone1: str
     phone2: Optional[str]
     religion: str
@@ -66,7 +65,6 @@ class StudentInfo:
             national_id=data['nationalId'],
             names=data['names'],
             email=data['email'],
-            confirm_email=data['confirmEmail'],
             phone1=data['phone1'],
             phone2=data.get('phone2'),
             religion=data['religion'],
