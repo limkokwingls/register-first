@@ -1,6 +1,6 @@
-from PySide6.QtCore import QObject, QSettings, QDate
+from PySide6.QtCore import QObject, QSettings, QDate, QUrl
 from PySide6.QtWidgets import (QVBoxLayout, QDialog, QLineEdit,
-                               QPushButton, QFormLayout, QMessageBox, QDateEdit)
+                               QPushButton, QFormLayout, QMessageBox, QDateEdit, QWidget, QSizePolicy)
 
 from ui.main.settings import Settings
 
@@ -10,15 +10,24 @@ class SettingsDialog(QDialog):
         super().__init__(parent)
         self.settings = Settings()
         self.setWindowTitle("Settings")
+        self.setFixedSize(400, 200)
         layout = QFormLayout(self)
+        layout.setContentsMargins(20, 30, 20, 20)
+        layout.setSpacing(10)
 
         self.term_input = QLineEdit(self)
         self.intake_date_input = QDateEdit(self)
         self.intake_date_input.setCalendarPopup(True)
         self.intake_date_input.setDisplayFormat("yyyy-MM-dd")
+        self.base_url = QLineEdit(self)
 
         layout.addRow("Term:", self.term_input)
         layout.addRow("Intake Date:", self.intake_date_input)
+        layout.addRow("Base URL:", self.base_url)
+
+        spacer = QWidget(self)
+        spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        layout.addRow(spacer)
 
         buttons = QVBoxLayout()
         save_button = QPushButton("Save", self)
@@ -37,9 +46,5 @@ class SettingsDialog(QDialog):
 
         self.settings.term = new_term
         self.settings.intake_date = new_intake_date
+        self.settings.base_url = self.base_url.text()
         self.accept()
-
-# Example usage in other parts of your application:
-# settings_manager = SettingsManager()
-# current_term = settings_manager.term
-# current_intake_date = settings_manager.intake_date

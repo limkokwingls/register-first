@@ -26,6 +26,17 @@ class Settings(QObject):
         self.settings.setValue("term", value)
 
     @property
+    def base_url(self):
+        url = str(self.settings.value("base_url", ""))
+        if url and not url.endswith("/"):
+            url += "/"
+        return url
+
+    @base_url.setter
+    def base_url(self, value):
+        self.settings.setValue("base_url", value)
+
+    @property
     def intake_date(self):
         saved_date = self.settings.value("intake_date", QDate.currentDate())
         if isinstance(saved_date, str):
@@ -40,6 +51,7 @@ class Settings(QObject):
         if isinstance(value, QDate):
             value = value.toString("yyyy-MM-dd")
         self.settings.setValue("intake_date", value)
+
 
     @classmethod
     def instance(cls):

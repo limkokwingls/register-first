@@ -10,7 +10,7 @@ def main():
     window = MainWindow()
     window.show()
     settings = Settings()
-    if settings.term == "" or not settings.intake_date:
+    if settings.term == "" or not settings.intake_date or settings.base_url == "":
         dialog = SettingsDialog(window)
         dialog.exec()
     app.exec()

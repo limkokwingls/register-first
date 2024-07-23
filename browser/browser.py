@@ -19,7 +19,9 @@ from ui.main.settings import Settings
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-BASE_URL = "https://cmslesothosandbox.limkokwing.net/campus/registry"
+settings = Settings()
+
+BASE_URL = f"{settings.base_url}/campus/registry"
 
 urllib3.disable_warnings(InsecureRequestWarning)
 
