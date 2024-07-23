@@ -53,7 +53,11 @@ class StudentInfo:
             phone=data['nextOfKin']['phone'],
             relationship=data['nextOfKin']['relationship']
         )
-        date_of_birth: DatetimeWithNanoseconds = data['dateOfBirth']
+        date_of_birth = data['dateOfBirth']
+        if isinstance(date_of_birth, DatetimeWithNanoseconds):
+            date_of_birth = date_of_birth.date()
+        elif isinstance(date_of_birth, str):
+            date_of_birth = date.fromisoformat(date_of_birth)
 
         return cls(
             doc_id=doc_id,
@@ -66,7 +70,7 @@ class StudentInfo:
             phone1=data['phone1'],
             phone2=data.get('phone2'),
             religion=data['religion'],
-            date_of_birth=date_of_birth.date(),
+            date_of_birth=date_of_birth,
             gender=data['gender'],
             marital_status=data['maritalStatus'],
             birth_place=data['birthPlace'],
