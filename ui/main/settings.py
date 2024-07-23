@@ -32,6 +32,9 @@ class Settings(QObject):
             return QDate.fromString(saved_date, "yyyy-MM-dd")
         return saved_date
 
+    def intake_date_str(self):
+        return self.intake_date.toString("yyyy-MM-dd")
+
     @intake_date.setter
     def intake_date(self, value):
         if isinstance(value, QDate):

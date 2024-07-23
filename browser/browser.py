@@ -14,6 +14,7 @@ from urllib3.exceptions import InsecureRequestWarning
 from browser.payloads import create_student_payload, student_details_payload, register_program_payload, \
     add_semester_payload, add_update_payload
 from model import StudentInfo
+from ui.main.settings import Settings
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -179,7 +180,7 @@ class Browser:
     def add_semester(self, std_program_id: int, program_code: str):
         logger.info(f"Adding semester for student '{std_program_id}'")
         url = f"{BASE_URL}/r_stdsemesterlist.php?showmaster=1&StdProgramID={std_program_id}"
-        term = "2022-08"  # TODO: Change this to 2024-08, get term from settings
+        term = Settings().term
         std_semester_id = self.get_id_for(self.fetch(url), term)
         if std_semester_id:
             logger.info(f"Semester already added, semester id: {std_semester_id}")
