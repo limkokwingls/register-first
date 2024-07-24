@@ -39,6 +39,7 @@ class SettingsDialog(QDialog):
         # Load current settings
         self.term_input.setText(self.settings.term)
         self.intake_date_input.setDate(self.settings.intake_date)
+        self.base_url.setText(self.settings.base_url)
 
     def save_settings(self):
         new_term = self.term_input.text()
