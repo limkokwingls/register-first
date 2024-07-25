@@ -270,7 +270,7 @@ class Browser:
             "a_search": "E",
             "z_StudentID": "=,,",
             "x_StudentID": "",
-            "z_StudentName": "LIKE,'%,%'",
+            "z_StudentName": "LIKE%2C%27%25%2C%25%27",
             "x_StudentName": quote_plus(names),
             "z_StudentNo": "LIKE,'%,%'",
             "x_StudentNo": national_id,
