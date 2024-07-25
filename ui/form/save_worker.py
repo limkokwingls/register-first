@@ -33,25 +33,25 @@ class SaveWorker(QObject):
 
             if std_no:
                 self.progress.emit(2)
-                self.message.emit(f"Adding student details, student number: {std_no}...")
+                self.message.emit(f"{std_no} | Adding student details...")
                 success = browser.add_student_details(std_no, self.student)
                 if success:
                     self.progress.emit(3)
-                    self.message.emit(f"Registering for {self.student.program.name}...")
+                    self.message.emit(f"{std_no} | Registering for {self.student.program.code}...")
                     std_program_id = browser.register_program(std_no, self.student.program.code)
                     if std_program_id:
                         self.progress.emit(4)
-                        self.message.emit(f"Adding semester...")
+                        self.message.emit(f"{std_no} | Adding semester...")
                         std_semester_id = browser.add_semester(std_program_id, self.student.program.code)
                         if std_semester_id:
                             self.progress.emit(5)
-                            self.message.emit("Adding modules...")
+                            self.message.emit(f"{std_no} | Adding modules...")
                             browser.add_modules(std_semester_id)
                             self.progress.emit(6)
-                            self.message.emit("Updating semester registration...")
+                            self.message.emit(f"{std_no} | Updating semester registration...")
                             browser.add_update(std_no)
                             self.progress.emit(7)
-                            self.message.emit("Updating database...")
+                            self.message.emit(f"{std_no} | Updating database...")
                             save_to_firestore(doc_id=self.student.doc_id, std_num=std_no, std=self.student)
                             self.progress.emit(8)
                         else:
