@@ -13,7 +13,7 @@ from urllib3.exceptions import InsecureRequestWarning
 
 from browser.payloads import create_student_payload, student_details_payload, register_program_payload, \
     add_semester_payload, add_update_payload
-from model import StudentInfo
+from model import StudentInfo, Program
 from ui.main.settings import Settings
 
 logging.basicConfig(level=logging.INFO)
@@ -179,7 +179,7 @@ class Browser:
         else:
             logger.error("Failed to register student into program")
 
-    def add_semester(self, std_program_id: int, program_code: str):
+    def add_semester(self, std_program_id: int, program_code: str, std: StudentInfo) -> int | None:
         logger.info(f"Adding semester for student '{std_program_id}'")
         url = f"{BASE_URL}/r_stdsemesterlist.php?showmaster=1&StdProgramID={std_program_id}"
         term = Settings().term
@@ -191,7 +191,8 @@ class Browser:
         page = BeautifulSoup(response.text, "lxml")
         form = page.select_one("form")
         payload = (get_form_payload(form) |
-                   add_semester_payload(std_program_id=std_program_id, semester_id=self.read_semester_id(form),
+                   add_semester_payload(std_program_id=std_program_id,
+                                        semester_id=self.read_semester_id(form, std.program),
                                         program_code=program_code, term=term))
         response = self.post(f"{BASE_URL}/r_stdsemesteradd.php", payload)
         std_semester_id = self.get_id_for(response, term)
@@ -209,20 +210,19 @@ class Browser:
         checkboxes = page.find_all('input', type='checkbox')
 
         modules = []
-        year1_sem1 = False
         for i, checkbox in enumerate(checkboxes):
             parent_tr = checkbox.find_parent('tr')
-            if parent_tr:
-                prev_td = parent_tr.find_previous('td', class_='phpmaker')
-                if prev_td and 'Year 1 Sem 1' in prev_td.text:
-                    year1_sem1 = True
-                elif prev_td and 'Year 1 Sem 2' in prev_td.text:
-                    year1_sem1 = False
+            # if parent_tr:
+            #     prev_td = parent_tr.find_previous('td', class_='phpmaker')
+            #     if prev_td and 'Year 1 Sem 1' in prev_td.text:
+            #         year1_sem1 = True
+            #     elif prev_td and 'Year 1 Sem 2' in prev_td.text:
+            #         year1_sem1 = False
 
             is_disabled = 'disabled' in checkbox.attrs
             is_blue = parent_tr and 'phpmaker1' in parent_tr.get('class', [])
 
-            if year1_sem1 and not is_disabled and is_blue:
+            if not is_disabled and is_blue:
                 modules.append(checkbox.attrs['value'])
 
         payload = get_form_payload(page) | {
@@ -242,11 +242,14 @@ class Browser:
         self.post(f"{BASE_URL}/s_updateadd.php", payload)
 
     @staticmethod
-    def read_semester_id(form: Tag):
+    def read_semester_id(form: Tag, program: Program):
+        target = "Year 1 Sem 1"
+        if program.bhr_year:
+            target = program.bhr_year
         sem_options = form.select("#x_SemesterID option")
         for option in sem_options:
             option_str = option.get_text(strip=True)
-            if "Year 1 Sem 1" in option_str:
+            if target in option_str:
                 return option.attrs['value']
 
         raise ValueError(

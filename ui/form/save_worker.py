@@ -42,7 +42,8 @@ class SaveWorker(QObject):
                     if std_program_id:
                         self.progress.emit(4)
                         self.message.emit(f"{std_no} | Adding semester...")
-                        std_semester_id = browser.add_semester(std_program_id, self.student.program.code)
+                        std_semester_id = browser.add_semester(std_program_id, self.student.program.code,
+                                                               std=self.student)
                         if std_semester_id:
                             self.progress.emit(5)
                             self.message.emit(f"{std_no} | Adding modules...")

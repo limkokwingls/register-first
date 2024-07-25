@@ -1,7 +1,7 @@
 from PySide6.QtCore import QDate, QThread
 from PySide6.QtWidgets import (QDialog, QFormLayout, QLineEdit, QDateEdit,
                                QComboBox, QPushButton, QVBoxLayout, QGroupBox, QHBoxLayout, QLabel, QProgressBar,
-                               QMessageBox)
+                               QMessageBox, QRadioButton, QButtonGroup)
 
 from model import StudentInfo, Program, NextOfKin
 from program_data import get_faculty_codes, get_program_names, get_program_code
@@ -59,14 +59,26 @@ class StudentForm(QDialog):
         self.faculty_code.currentIndexChanged.connect(self.handle_faculty_change)
         self.program_name = QComboBox()
         self.program_name.addItems(get_program_names(self.faculty_code.currentText()))
-        self.program_name.currentIndexChanged.connect(
-            lambda: self.program_code.setText(get_program_code(self.program_name.currentText()))
-        )
+        self.program_name.currentIndexChanged.connect(self.handle_program_change)
         self.program_code = QLineEdit()
         self.program_code.setReadOnly(True)
+
+        self.bhr_options_group = QGroupBox("BHR Options")
+        self.bhr_options_group.setVisible(False)
+        bhr_options_layout = QHBoxLayout()
+        self.bhr_first_year = QRadioButton("First Year")
+        self.bhr_advanced = QRadioButton("Advanced")
+        self.bhr_button_group = QButtonGroup()
+        self.bhr_button_group.addButton(self.bhr_first_year)
+        self.bhr_button_group.addButton(self.bhr_advanced)
+        bhr_options_layout.addWidget(self.bhr_first_year)
+        bhr_options_layout.addWidget(self.bhr_advanced)
+        self.bhr_options_group.setLayout(bhr_options_layout)
+
         program_layout.addRow("Faculty Code:", self.faculty_code)
         program_layout.addRow("Name:", self.program_name)
         program_layout.addRow("Code:", self.program_code)
+        program_layout.addRow(self.bhr_options_group)
         program_group.setLayout(program_layout)
 
         # Next of Kin Information
@@ -104,6 +116,16 @@ class StudentForm(QDialog):
         self.program_name.clear()
         self.program_name.addItems(get_program_names(self.faculty_code.currentText()))
 
+    def handle_program_change(self):
+        program_code = get_program_code(self.program_name.currentText())
+        self.program_code.setText(program_code)
+        self.bhr_options_group.setVisible(program_code == "BHR")
+        if program_code != "BHR":
+            self.bhr_button_group.setExclusive(False)
+            self.bhr_first_year.setChecked(False)
+            self.bhr_advanced.setChecked(False)
+            self.bhr_button_group.setExclusive(True)
+
     def populate_form(self, student_info: StudentInfo):
         self.national_id.setText(student_info.national_id)
         self.names.setText(format_name(student_info.names))
@@ -126,7 +148,19 @@ class StudentForm(QDialog):
         self.next_of_kin_phone.setText(format_phone(student_info.next_of_kin.phone))
         self.next_of_kin_relationship.setText(student_info.next_of_kin.relationship)
 
+        self.handle_program_change()
+
+        if student_info.program.code == "BHR":
+            if student_info.program.bhr_year == "First Year":
+                self.bhr_first_year.setChecked(True)
+            elif student_info.program.bhr_year == "Advanced":
+                self.bhr_advanced.setChecked(True)
+
     def save_student_info(self):
+        if self.program_code.text() == "BHR" and not self.bhr_button_group.checkedButton():
+            QMessageBox.warning(self, "Incomplete Form", "Please select a BHR option (First Year or Advanced).")
+            return
+
         self.save_button.setEnabled(False)
 
         student = self.from_form()
@@ -165,10 +199,19 @@ class StudentForm(QDialog):
             self.status_label.setText(f"Error saving student information: {message}")
 
     def from_form(self) -> StudentInfo:
+        hr_option = self.bhr_button_group.checkedButton().text() if self.program_code.text() == "BHR" else None
+        bhr_year = None
+        if hr_option:
+            if hr_option == "Advanced":
+                bhr_year = "Year 2 Sem 1"
+            else:
+                bhr_year = "Year 1 Sem 1"
+
         program = Program(
             name=self.program_name.currentText(),
             code=self.program_code.text(),
-            faculty_code=self.faculty_code.currentText()
+            faculty_code=self.faculty_code.currentText(),
+            bhr_year=bhr_year
         )
 
         next_of_kin = NextOfKin(

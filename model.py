@@ -10,6 +10,7 @@ class Program:
     name: str
     code: str
     faculty_code: str
+    bhr_year: Optional[str] = None
 
 
 @dataclass
