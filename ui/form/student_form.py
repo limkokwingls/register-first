@@ -209,19 +209,19 @@ def format_place(name: str | None) -> str | None:
             parts[i] = part
         else:
             parts[i] = part.capitalize()
-    return " ".join(parts)
+    return " ".join(parts).strip()
 
 
 def format_phone(phone: str | None) -> str:
     if not phone:
         return ""
-    phone = phone.replace(" ", "")
+    phone = phone.replace(" ", "").strip()
     if len(phone) == 8:
         return f"+266{phone}"
-    return phone
+    return phone.strip()
 
 
 def format_name(name: str | None) -> str | None:
     if not name:
         return None
-    return " ".join([part.capitalize() for part in name.split()])
+    return " ".join([part.capitalize() for part in name.split()]).strip()
