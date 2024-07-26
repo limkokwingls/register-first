@@ -86,7 +86,6 @@ class StudentInfo:
             "nationalId": self.national_id,
             "names": self.names,
             "email": self.email,
-            "confirmEmail": self.confirm_email,
             "phone1": self.phone1,
             "phone2": self.phone2,
             "religion": self.religion,
