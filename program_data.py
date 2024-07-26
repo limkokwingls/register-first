@@ -63,7 +63,7 @@ __data = [
     ),
     Program(
         school_id=5,
-        faculty="FDI",
+        faculty="FBMG",
         code="BEN",
         program_id=136,
         name="B Bus in Entrepreneurship",
@@ -76,7 +76,7 @@ __data = [
         code="BHR",
         program_id=137,  # Todo: Handle HR Advanced
         name="BA in Human Resource Management",
-        version=507,
+        version=528,
     ),
     Program(
         school_id=5,
