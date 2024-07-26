@@ -162,7 +162,7 @@ class Browser:
     def register_program(self, std_no: str, program_code: str) -> int | None:
         logger.info(f"Registering student '{std_no}' into program '{program_code}'")
         url = f"{BASE_URL}/r_stdprogramlist.php?showmaster=1&StudentID={std_no}"
-        std_program_id = self.get_id_for(self.fetch(url), program_code)
+        std_program_id = self.get_std_program_id(self.fetch(url), program_code)
         if std_program_id:
             logger.info(
                 f"Student already registered into program '{program_code}', student program id: {std_program_id}")
@@ -172,7 +172,7 @@ class Browser:
         form = page.select_one("form")
         payload = get_form_payload(form) | register_program_payload(std_no, program_code)
         response = self.post(f"{BASE_URL}/r_stdprogramadd.php", payload)
-        std_program_id = self.get_id_for(response, program_code)
+        std_program_id = self.get_std_program_id(response, program_code)
         if "Successful" in response.text:
             logger.info(f"Student registered into program successfully, student program id: {std_program_id}")
             return int(std_program_id.strip())
@@ -212,13 +212,6 @@ class Browser:
         modules = []
         for i, checkbox in enumerate(checkboxes):
             parent_tr = checkbox.find_parent('tr')
-            # if parent_tr:
-            #     prev_td = parent_tr.find_previous('td', class_='phpmaker')
-            #     if prev_td and 'Year 1 Sem 1' in prev_td.text:
-            #         year1_sem1 = True
-            #     elif prev_td and 'Year 1 Sem 2' in prev_td.text:
-            #         year1_sem1 = False
-
             is_disabled = 'disabled' in checkbox.attrs
             is_blue = parent_tr and 'phpmaker1' in parent_tr.get('class', [])
 
@@ -264,6 +257,20 @@ class Browser:
             for row in rows:
                 cols = row.select("td")
                 if search_key in cols[0].text.strip():
+                    return row.select_one("a").attrs["href"].split("=")[-1]
+
+    @staticmethod
+    def get_std_program_id(response: requests.Response, code: str) -> str:
+        page = BeautifulSoup(response.text, "lxml")
+        table = page.select_one("table#ewlistmain")
+        if table:
+            rows = table.select("tr.ewTableRow")
+            for row in rows:
+                cols = row.select("td")
+                code_text = cols[0].text.strip()
+                status = cols[4].text.strip()
+                logger.info(f"Searching for {code}, Found (Code: {code_text}, Status: {status})")
+                if code_text.startswith(code) and status == "Active":
                     return row.select_one("a").attrs["href"].split("=")[-1]
 
     @staticmethod
