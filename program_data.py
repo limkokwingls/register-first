@@ -124,7 +124,7 @@ __data = [
         code="BPC",
         program_id=142,
         name="BA in Professional Communication",
-        version=491,
+        version=530,
     ),
     Program(
         school_id=7,
