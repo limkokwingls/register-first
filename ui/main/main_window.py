@@ -60,7 +60,7 @@ class MainWindow(QMainWindow):
     def setup_firestore_listener(self):
         students_ref = db.collection('registrations').where(filter=FieldFilter(
             field_path='stdNo', op_string='>', value=0
-        )).limit(20).order_by("stdNo")
+        )).limit(20).order_by("stdNo", "DESCENDING")
         students_ref.on_snapshot(self.on_snapshot)
 
     def on_snapshot(self, doc_snapshot, changes, read_time):
