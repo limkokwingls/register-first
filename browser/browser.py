@@ -212,15 +212,21 @@ class Browser:
         modules = []
         for i, checkbox in enumerate(checkboxes):
             parent_tr = checkbox.find_parent('tr')
-            is_disabled = 'disabled' in checkbox.attrs
+            # is_disabled = 'disabled' in checkbox.attrs
             is_blue = parent_tr and 'phpmaker1' in parent_tr.get('class', [])
 
-            if not is_disabled and is_blue:
+            if is_blue:
                 modules.append(checkbox.attrs['value'])
+
+        modules_with_amounts = []
+        for module in modules:
+            parts = module.split('-')
+            parts[-1] = '1200'
+            modules_with_amounts.append('-'.join(parts))
 
         payload = get_form_payload(page) | {
             "Submit": "Add+Modules",
-            "take[]": modules
+            "take[]": modules_with_amounts
         }
         hidden_inputs = page.find_all('input', type='hidden')
         for hidden in hidden_inputs:
