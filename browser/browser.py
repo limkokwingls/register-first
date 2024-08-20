@@ -80,13 +80,13 @@ class Browser:
 
     def fetch(self, url: str) -> Response:
         logger.info(f"Fetching {url}")
-        response = self.session.get(url)
+        response = self.session.get(url, timeout=120)
         is_logged_in = check_logged_in(response.text)
         if not is_logged_in:
             logger.info("Not logged in")
             self.login()
             logger.info(f"Logged in, re-fetching {url}")
-            response = self.session.get(url)
+            response = self.session.get(url, timeout=120)
         if response.status_code != 200:
             logger.warning(f"Unexpected status code: {response.status_code}")
         return response
@@ -94,13 +94,13 @@ class Browser:
     def post(self, url: str, data: dict | str) -> Response:
         logger.info(f"Posting to {url}")
         logger.info(f"Data: {data}")
-        response = self.session.post(url, data)
+        response = self.session.post(url, data, timeout=120)
         is_logged_in = check_logged_in(response.text)
         if not is_logged_in:
             logger.info("Not logged in")
             self.login()
             logger.info(f"Logged in, re-posting to {url}")
-            response = self.session.post(url, data)
+            response = self.session.post(url, data, timeout=120)
         if response.status_code != 200:
             logger.warning(f"Unexpected status code: {response.status_code}")
         return response
