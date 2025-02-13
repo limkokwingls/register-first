@@ -1,10 +1,18 @@
+from google.cloud.firestore_v1 import FieldFilter, aggregation
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtGui import QAction
-from PySide6.QtWidgets import (QMainWindow, QVBoxLayout, QWidget, QTableWidget, QHeaderView,
-                               QTableWidgetItem, QLabel, QToolBar)
-from google.cloud.firestore_v1 import FieldFilter, aggregation
+from PySide6.QtWidgets import (
+    QHeaderView,
+    QLabel,
+    QMainWindow,
+    QTableWidget,
+    QTableWidgetItem,
+    QToolBar,
+    QVBoxLayout,
+    QWidget,
+)
 
-from config.firebase import db
+from config.database import db
 from ui.form.student_form import StudentForm
 from ui.main.LookupWidget import LookupWidget
 from ui.main.settings_dialog import SettingsDialog
@@ -39,10 +47,14 @@ class MainWindow(QMainWindow):
         self.table = QTableWidget()
         self.table.setColumnCount(4)
         self.total_label = QLabel("Registered Students: ?")
-        self.table.setHorizontalHeaderLabels(["Student No.", "Name", "National ID", "Program"])
+        self.table.setHorizontalHeaderLabels(
+            ["Student No.", "Name", "National ID", "Program"]
+        )
         layout.addWidget(self.total_label)
         layout.addWidget(self.table)
-        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.table.horizontalHeader().setSectionResizeMode(
+            QHeaderView.ResizeMode.Stretch
+        )
 
         settings_action = QAction("Settings", self)
         settings_action.triggered.connect(self.open_settings_dialog)
@@ -58,9 +70,12 @@ class MainWindow(QMainWindow):
         dialog.exec()
 
     def setup_firestore_listener(self):
-        students_ref = db.collection('registrations').where(filter=FieldFilter(
-            field_path='stdNo', op_string='>', value=0
-        )).limit(20).order_by("stdNo", "DESCENDING")
+        students_ref = (
+            db.collection("registrations")
+            .where(filter=FieldFilter(field_path="stdNo", op_string=">", value=0))
+            .limit(20)
+            .order_by("stdNo", "DESCENDING")
+        )
         students_ref.on_snapshot(self.on_snapshot)
 
     def on_snapshot(self, doc_snapshot, changes, read_time):
@@ -72,20 +87,22 @@ class MainWindow(QMainWindow):
 
     def update_table(self, students):
         # order by stdNo descending
-        students.sort(key=lambda x: x.get('stdNo', 0), reverse=True)
+        students.sort(key=lambda x: x.get("stdNo", 0), reverse=True)
         self.table.setRowCount(len(students))
         for row, student in enumerate(students):
-            self.table.setItem(row, 0, QTableWidgetItem(str(student.get('stdNo', ''))))
-            self.table.setItem(row, 1, QTableWidgetItem(student.get('names', '')))
-            self.table.setItem(row, 2, QTableWidgetItem(student.get('nationalId', '')))
-            self.table.setItem(row, 3, QTableWidgetItem(student.get('program', '').get('name')))
+            self.table.setItem(row, 0, QTableWidgetItem(str(student.get("stdNo", ""))))
+            self.table.setItem(row, 1, QTableWidgetItem(student.get("names", "")))
+            self.table.setItem(row, 2, QTableWidgetItem(student.get("nationalId", "")))
+            self.table.setItem(
+                row, 3, QTableWidgetItem(student.get("program", "").get("name"))
+            )
 
         self.update_total_students()
 
     def update_total_students(self):
-        query = db.collection('registrations').where(filter=FieldFilter(
-            field_path='stdNo', op_string='>', value=0
-        ))
+        query = db.collection("registrations").where(
+            filter=FieldFilter(field_path="stdNo", op_string=">", value=0)
+        )
         aggregate_query = aggregation.AggregationQuery(query)
         aggregate_query.count(alias="count")
 

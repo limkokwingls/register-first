@@ -1,11 +1,19 @@
 import logging
 from typing import Callable
 
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QHBoxLayout, QMessageBox, \
-    QSpacerItem
 from google.cloud.firestore_v1 import FieldFilter, Or
+from PySide6.QtWidgets import (
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QMessageBox,
+    QPushButton,
+    QSpacerItem,
+    QVBoxLayout,
+    QWidget,
+)
 
-from config.firebase import db
+from config.database import db
 from model import StudentInfo
 
 logging.basicConfig(level=logging.INFO)
@@ -49,7 +57,10 @@ class LookupWidget(QWidget):
         self.setLayout(layout)
 
     def enable_lookup(self):
-        if len(self.id_input.input.text()) > 1 or len(self.reference_no.input.text()) > 1:
+        if (
+            len(self.id_input.input.text()) > 1
+            or len(self.reference_no.input.text()) > 1
+        ):
             self.lookup_button.setDisabled(False)
         else:
             self.lookup_button.setDisabled(True)
@@ -58,7 +69,9 @@ class LookupWidget(QWidget):
         self.lookup_button.setDisabled(True)
         reference_no = self.reference_no.input.text().lower().replace("/", "-").strip()
         national_id = self.id_input.input.text().strip()
-        logger.info(f"Looking up student by national id no. '{national_id}' or reference no. '{reference_no}'")
+        logger.info(
+            f"Looking up student by national id no. '{national_id}' or reference no. '{reference_no}'"
+        )
         try:
             filter_1 = FieldFilter("nationalId", "==", national_id)
             filter_2 = FieldFilter("reference", "==", reference_no)
