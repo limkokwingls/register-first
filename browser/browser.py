@@ -11,9 +11,14 @@ from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.wait import WebDriverWait
 from urllib3.exceptions import InsecureRequestWarning
 
-from browser.payloads import create_student_payload, student_details_payload, register_program_payload, \
-    add_semester_payload, add_update_payload
-from model import StudentInfo, Program
+from browser.payloads import (
+    add_semester_payload,
+    add_update_payload,
+    create_student_payload,
+    register_program_payload,
+    student_details_payload,
+)
+from model import Program, StudentInfo
 from ui.main.settings import Settings
 
 logging.basicConfig(level=logging.INFO)
@@ -151,8 +156,10 @@ class Browser:
         form = page.select_one("form")
         payload = get_form_payload(form) | student_details_payload(std_no, student_info)
         response = self.post(f"{BASE_URL}/r_stdpersonaladd.php", payload)
-        if ("Successful" in response.text
-                or "Duplicate value for primary key" in response.text):
+        if (
+            "Successful" in response.text
+            or "Duplicate value for primary key" in response.text
+        ):
             logger.info("Student details added successfully")
             return True
         else:
@@ -165,21 +172,28 @@ class Browser:
         std_program_id = self.get_std_program_id(self.fetch(url), program_code)
         if std_program_id:
             logger.info(
-                f"Student already registered into program '{program_code}', student program id: {std_program_id}")
+                f"Student already registered into program '{program_code}', student program id: {std_program_id}"
+            )
             return int(std_program_id.strip())
         response = self.fetch(f"{BASE_URL}/r_stdprogramadd.php")
         page = BeautifulSoup(response.text, "lxml")
         form = page.select_one("form")
-        payload = get_form_payload(form) | register_program_payload(std_no, program_code)
+        payload = get_form_payload(form) | register_program_payload(
+            std_no, program_code
+        )
         response = self.post(f"{BASE_URL}/r_stdprogramadd.php", payload)
         std_program_id = self.get_std_program_id(response, program_code)
         if "Successful" in response.text:
-            logger.info(f"Student registered into program successfully, student program id: {std_program_id}")
+            logger.info(
+                f"Student registered into program successfully, student program id: {std_program_id}"
+            )
             return int(std_program_id.strip())
         else:
             logger.error("Failed to register student into program")
 
-    def add_semester(self, std_program_id: int, program_code: str, std: StudentInfo) -> int | None:
+    def add_semester(
+        self, std_program_id: int, program_code: str, std: StudentInfo
+    ) -> int | None:
         logger.info(f"Adding semester for student '{std_program_id}'")
         url = f"{BASE_URL}/r_stdsemesterlist.php?showmaster=1&StdProgramID={std_program_id}"
         term = Settings().term
@@ -190,10 +204,12 @@ class Browser:
         response = self.fetch(f"{BASE_URL}/r_stdsemesteradd.php")
         page = BeautifulSoup(response.text, "lxml")
         form = page.select_one("form")
-        payload = (get_form_payload(form) |
-                   add_semester_payload(std_program_id=std_program_id,
-                                        semester_id=self.read_semester_id(form, std.program),
-                                        program_code=program_code, term=term))
+        payload = get_form_payload(form) | add_semester_payload(
+            std_program_id=std_program_id,
+            semester_id=self.read_semester_id(form, std.program),
+            program_code=program_code,
+            term=term,
+        )
         response = self.post(f"{BASE_URL}/r_stdsemesteradd.php", payload)
         std_semester_id = self.get_id_for(response, term)
         if "Successful" in response.text:
@@ -207,30 +223,30 @@ class Browser:
         self.fetch(url)
         add_response = self.fetch(f"{BASE_URL}/r_stdmoduleadd1.php")
         page = BeautifulSoup(add_response.text, "lxml")
-        checkboxes = page.find_all('input', type='checkbox')
+        checkboxes = page.find_all("input", type="checkbox")
 
         modules = []
         for i, checkbox in enumerate(checkboxes):
-            parent_tr = checkbox.find_parent('tr')
+            parent_tr = checkbox.find_parent("tr")
             # is_disabled = 'disabled' in checkbox.attrs
-            is_blue = parent_tr and 'phpmaker1' in parent_tr.get('class', [])
+            is_blue = parent_tr and "phpmaker1" in parent_tr.get("class", [])
 
             if is_blue:
-                modules.append(checkbox.attrs['value'])
+                modules.append(checkbox.attrs["value"])
 
         modules_with_amounts = []
         for module in modules:
-            parts = module.split('-')
-            parts[-1] = '1200'
-            modules_with_amounts.append('-'.join(parts))
+            parts = module.split("-")
+            parts[-1] = "1200"
+            modules_with_amounts.append("-".join(parts))
 
         payload = get_form_payload(page) | {
             "Submit": "Add+Modules",
-            "take[]": modules_with_amounts
+            "take[]": modules_with_amounts,
         }
-        hidden_inputs = page.find_all('input', type='hidden')
+        hidden_inputs = page.find_all("input", type="hidden")
         for hidden in hidden_inputs:
-            payload.update({hidden['name']: hidden['value']})
+            payload.update({hidden["name"]: hidden["value"]})
 
         self.post(f"{BASE_URL}/r_stdmoduleadd1.php", payload)
 
@@ -249,17 +265,18 @@ class Browser:
         for option in sem_options:
             option_str = option.get_text(strip=True)
             if target in option_str:
-                return option.attrs['value']
+                return option.attrs["value"]
 
         raise ValueError(
-            f"semester_id cannot be empty was expecting 'Year 1 Sem 1' but not found")
+            f"semester_id cannot be empty was expecting 'Year 1 Sem 1' but not found"
+        )
 
     @staticmethod
     def get_id_for(response: requests.Response, search_key: str) -> str:
         page = BeautifulSoup(response.text, "lxml")
         table = page.select_one("table#ewlistmain")
         if table:
-            rows = table.select("tr.ewTableRow")
+            rows = table.select("tr")
             for row in rows:
                 cols = row.select("td")
                 if search_key in cols[0].text.strip():
@@ -270,12 +287,14 @@ class Browser:
         page = BeautifulSoup(response.text, "lxml")
         table = page.select_one("table#ewlistmain")
         if table:
-            rows = table.select("tr.ewTableRow")
+            rows = table.select("tr")
             for row in rows:
                 cols = row.select("td")
                 code_text = cols[0].text.strip()
                 status = cols[4].text.strip()
-                logger.info(f"Searching for {code}, Found (Code: {code_text}, Status: {status})")
+                logger.info(
+                    f"Searching for {code}, Found (Code: {code_text}, Status: {status})"
+                )
                 if code_text.startswith(code) and status == "Active":
                     return row.select_one("a").attrs["href"].split("=")[-1]
 
