@@ -1,4 +1,3 @@
-from google.cloud.firestore_v1 import FieldFilter, aggregation
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import (
@@ -11,22 +10,25 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from sqlalchemy import func
+from sqlalchemy.orm import Session
 
-from config.database import db
+from models import Student
 from ui.form.student_form import StudentForm
 from ui.main.LookupWidget import LookupWidget
 from ui.main.settings_dialog import SettingsDialog
 
 
-class FirestoreSignals(QObject):
+class DatabaseSignals(QObject):
     dataChanged = Signal(list)
 
 
 class MainWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, session: Session):
         super().__init__()
-        self.firestore_signals = FirestoreSignals()
-        self.firestore_signals.dataChanged.connect(self.update_table)
+        self.session = session
+        self.db_signals = DatabaseSignals()
+        self.db_signals.dataChanged.connect(self.update_table)
 
         menu = self.menuBar()
         file_menu = menu.addMenu("&File")
@@ -36,7 +38,7 @@ class MainWindow(QMainWindow):
         file_menu.addAction(new_action)
         menu.addMenu(file_menu)
 
-        lookup = LookupWidget(handle_response)
+        lookup = LookupWidget(self.session, handle_response)
 
         layout = QVBoxLayout()
         layout.addWidget(lookup)
@@ -62,28 +64,22 @@ class MainWindow(QMainWindow):
 
         self.resize(980, 600)
 
-        self.setup_firestore_listener()
+        self.setup_data_listener()
         self.update_total_students()
 
     def open_settings_dialog(self):
         dialog = SettingsDialog(self)
         dialog.exec()
 
-    def setup_firestore_listener(self):
-        students_ref = (
-            db.collection("registrations")
-            .where(filter=FieldFilter(field_path="stdNo", op_string=">", value=0))
+    def setup_data_listener(self):
+        students = (
+            self.session.query(Student)
+            .filter(Student.std_no.isnot(None))
+            .order_by(Student.std_no.desc())
             .limit(20)
-            .order_by("stdNo", "DESCENDING")
+            .all()
         )
-        students_ref.on_snapshot(self.on_snapshot)
-
-    def on_snapshot(self, doc_snapshot, changes, read_time):
-        students = []
-        for doc in doc_snapshot:
-            student_data = doc.to_dict()
-            students.append(student_data)
-        self.firestore_signals.dataChanged.emit(students)
+        self.db_signals.dataChanged.emit([s.to_dict() for s in students])
 
     def update_table(self, students):
         # order by stdNo descending
@@ -100,14 +96,13 @@ class MainWindow(QMainWindow):
         self.update_total_students()
 
     def update_total_students(self):
-        query = db.collection("registrations").where(
-            filter=FieldFilter(field_path="stdNo", op_string=">", value=0)
+        count = (
+            self.session.query(func.count(Student.id))
+            .filter(Student.std_no.isnot(None))
+            .scalar()
         )
-        aggregate_query = aggregation.AggregationQuery(query)
-        aggregate_query.count(alias="count")
 
-        count = aggregate_query.get()[0][0]
-        self.total_label.setText(f"Registered Students: {count.value}")
+        self.total_label.setText(f"Registered Students: {count}")
 
 
 def handle_response(student_info):

@@ -1,21 +1,26 @@
 import logging
+from datetime import datetime
 
-from google.cloud import firestore
+from sqlalchemy.orm import Session
 
-from config.database import db
-from model import StudentInfo
+from models import Student
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def save_to_firestore(doc_id: str, std_num: str, std: StudentInfo = None):
+def save_student_number(
+    session: Session, doc_id: str, std_num: str, std: Student = None
+):
     if not doc_id and std:
-        db.collection("registrations").add(
-            std.to_dict()
-            | {"stdNo": int(std_num), "createdAt": firestore.SERVER_TIMESTAMP}
-        )
+        std.std_no = int(std_num)
+        std.created_at = datetime.utcnow()
+        session.add(std)
     else:
-        doc_ref = db.collection("registrations").document(doc_id)
-        doc_ref.update({"stdNo": int(std_num), "createdAt": firestore.SERVER_TIMESTAMP})
+        student = session.get(Student, doc_id)
+        if student:
+            student.std_no = int(std_num)
+            student.created_at = datetime.utcnow()
+
+    session.commit()
     logger.info(f"Updated student number for {doc_id} to {std_num}")

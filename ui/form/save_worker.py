@@ -1,11 +1,12 @@
 import logging
 import traceback
 
-from PySide6.QtCore import QObject, Slot, Signal
+from PySide6.QtCore import QObject, Signal, Slot
+from sqlalchemy.orm import Session
 
 from browser import Browser
-from model import StudentInfo
-from service import save_to_firestore
+from models import Student
+from service import save_student_number
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -16,8 +17,9 @@ class SaveWorker(QObject):
     message = Signal(str)
     progress = Signal(int)
 
-    def __init__(self, student: StudentInfo):
+    def __init__(self, session: Session, student: Student):
         super().__init__()
+        self.session = session
         self.student = student
 
     @Slot()
@@ -37,23 +39,32 @@ class SaveWorker(QObject):
                 success = browser.add_student_details(std_no, self.student)
                 if success:
                     self.progress.emit(3)
-                    self.message.emit(f"{std_no} | Registering for {self.student.program.code}...")
-                    std_program_id = browser.register_program(std_no, self.student.program.code)
+                    self.message.emit(
+                        f"{std_no} | Registering for {self.student.program.code}..."
+                    )
+                    std_program_id = browser.register_program(
+                        std_no, self.student.program.code
+                    )
                     if std_program_id:
                         self.progress.emit(4)
                         self.message.emit(f"{std_no} | Adding semester...")
-                        std_semester_id = browser.add_semester(std_program_id, self.student.program.code,
-                                                               std=self.student)
+                        std_semester_id = browser.add_semester(
+                            std_program_id, self.student.program.code, std=self.student
+                        )
                         if std_semester_id:
                             self.progress.emit(5)
                             self.message.emit(f"{std_no} | Adding modules...")
                             browser.add_modules(std_semester_id)
                             self.progress.emit(6)
-                            self.message.emit(f"{std_no} | Updating semester registration...")
+                            self.message.emit(
+                                f"{std_no} | Updating semester registration..."
+                            )
                             browser.add_update(std_no)
                             self.progress.emit(7)
                             self.message.emit(f"{std_no} | Updating database...")
-                            save_to_firestore(doc_id=self.student.doc_id, std_num=std_no, std=self.student)
+                            save_student_number(
+                                self.session, self.student.id, std_no, self.student
+                            )
                             self.progress.emit(8)
                         else:
                             self.message.emit("Failed to add semester")

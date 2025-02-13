@@ -3,11 +3,31 @@ import os
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
+from sqlalchemy.orm import sessionmaker
+
+from models import Base
 
 load_dotenv()
 
 TURSO_DATABASE_URL = os.getenv("TURSO_DATABASE_URL")
 TURSO_AUTH_TOKEN = os.getenv("TURSO_AUTH_TOKEN")
+
+# Replace with your database URL
+DATABASE_URL = "sqlite:///students.db"  # or use environment variable
+
+engine = create_engine(DATABASE_URL)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+# Create tables
+Base.metadata.create_all(bind=engine)
+
+
+def get_session():
+    session = SessionLocal()
+    try:
+        yield session
+    finally:
+        session.close()
 
 
 def get_engine() -> Engine:
@@ -20,6 +40,3 @@ def get_engine() -> Engine:
         )
     else:
         raise ValueError("TURSO_AUTH_TOKEN or TURSO_DATABASE_URL missing")
-
-
-engine = get_engine()

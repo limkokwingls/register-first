@@ -18,7 +18,7 @@ from browser.payloads import (
     register_program_payload,
     student_details_payload,
 )
-from model import Program, StudentInfo
+from models import Program, Student
 from ui.main.settings import Settings
 
 logging.basicConfig(level=logging.INFO)
@@ -128,7 +128,7 @@ class Browser:
         url = f"{BASE_URL}/r_studentviewlist.php"
         self.fetch(url)
 
-    def create_student(self, std: StudentInfo) -> str | None:
+    def create_student(self, std: Student) -> str | None:
         logger.info("Creating student...")
         url = f"{BASE_URL}/r_studentadd.php"
         std_id = self.find_student(names=std.names, national_id=std.national_id)
@@ -147,14 +147,14 @@ class Browser:
             logger.error("Failed to create student")
             return None
 
-    def add_student_details(self, std_no: str, student_info: StudentInfo):
+    def add_student_details(self, std_no: str, std: Student) -> bool:
         logger.info(f"Adding student details for '{std_no}'")
         url = f"{BASE_URL}/r_stdpersonallist.php?showmaster=1&x_StudentNo={std_no}"
         self.fetch(url)
         response = self.fetch(f"{BASE_URL}/r_stdpersonaladd.php")
         page = BeautifulSoup(response.text, "lxml")
         form = page.select_one("form")
-        payload = get_form_payload(form) | student_details_payload(std_no, student_info)
+        payload = get_form_payload(form) | student_details_payload(std_no, std)
         response = self.post(f"{BASE_URL}/r_stdpersonaladd.php", payload)
         if (
             "Successful" in response.text
@@ -192,7 +192,7 @@ class Browser:
             logger.error("Failed to register student into program")
 
     def add_semester(
-        self, std_program_id: int, program_code: str, std: StudentInfo
+        self, std_program_id: int, program_code: str, std: Student
     ) -> int | None:
         logger.info(f"Adding semester for student '{std_program_id}'")
         url = f"{BASE_URL}/r_stdsemesterlist.php?showmaster=1&StdProgramID={std_program_id}"

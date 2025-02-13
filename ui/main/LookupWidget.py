@@ -1,7 +1,6 @@
 import logging
 from typing import Callable
 
-from google.cloud.firestore_v1 import FieldFilter, Or
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
@@ -12,9 +11,10 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from sqlalchemy import or_
+from sqlalchemy.orm import Session
 
-from config.database import db
-from model import StudentInfo
+from models import Student
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -31,8 +31,11 @@ class InputField(QWidget):
 
 
 class LookupWidget(QWidget):
-    def __init__(self, handle_response: Callable[[StudentInfo | None], None]):
+    def __init__(
+        self, session: Session, handle_response: Callable[[Student | None], None]
+    ):
         super().__init__()
+        self.session = session
         self.handle_response = handle_response
         self.id_input = InputField("National Id")
         self.id_input.input.textChanged.connect(self.enable_lookup)
@@ -73,21 +76,24 @@ class LookupWidget(QWidget):
             f"Looking up student by national id no. '{national_id}' or reference no. '{reference_no}'"
         )
         try:
-            filter_1 = FieldFilter("nationalId", "==", national_id)
-            filter_2 = FieldFilter("reference", "==", reference_no)
-
-            docs = (
-                db.collection("registrations")
-                .where(filter=Or(filters=[filter_1, filter_2]))
-                .get()
+            student = (
+                self.session.query(Student)
+                .filter(
+                    or_(
+                        Student.national_id == national_id,
+                        Student.reference == reference_no,
+                    )
+                )
+                .first()
             )
-            student_info = None
-            if docs:
-                logger.info(f"Found {len(docs)} student(s)")
-                student_info = StudentInfo.from_dict(docs[0].to_dict(), docs[0].id)
+
+            if student:
+                logger.info(f"Found student with ID {student.id}")
             else:
                 logger.warning("No student found")
-            self.handle_response(student_info)
+
+            self.handle_response(student)
+
         except Exception as e:
             logger.error(e)
             QMessageBox.critical(self, "Error", str(e))
