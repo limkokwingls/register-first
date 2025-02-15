@@ -24,4 +24,11 @@ def get_engine() -> Engine:
 
 
 engine = get_engine()
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+SessionLocal = sessionmaker(
+    autocommit=False,
+    autoflush=False,
+    bind=engine,
+    # Prevent SQLAlchemy from creating/modifying tables
+    expire_on_commit=False,
+)
