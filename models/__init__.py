@@ -11,34 +11,34 @@ class Base(DeclarativeBase):
 
 
 class Gender(StrEnum):
-    MALE = "Male"
-    FEMALE = "Female"
+    Male = "Male"
+    Female = "Female"
 
 
 class Religion(StrEnum):
-    CHRISTIAN = "Christian"
-    MUSLIM = "Muslim"
-    HINDU = "Hindu"
-    BUDDHIST = "Buddhist"
-    OTHER = "Other"
+    Christian = "Christian"
+    Muslim = "Muslim"
+    Hindu = "Hindu"
+    Buddhist = "Buddhist"
+    Other = "Other"
 
 
 class MaritalStatus(StrEnum):
-    SINGLE = "Single"
-    MARRIED = "Married"
-    DIVORCED = "Divorced"
-    WIDOWED = "Widowed"
-    OTHER = "Other"
+    Single = "Single"
+    Married = "Married"
+    Divorced = "Divorced"
+    Widowed = "Widowed"
+    Other = "Other"
 
 
 class NextOfKinRelationship(StrEnum):
-    FATHER = "Father"
-    MOTHER = "Mother"
-    BROTHER = "Brother"
-    SISTER = "Sister"
-    SPOUSE = "Spouse"
-    CHILD = "Child"
-    OTHER = "Other"
+    Father = "Father"
+    Mother = "Mother"
+    Brother = "Brother"
+    Sister = "Sister"
+    Spouse = "Spouse"
+    Child = "Child"
+    Other = "Other"
 
 
 class Student(Base):
@@ -65,8 +65,6 @@ class Student(Base):
         nullable=False
     )
     paid: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
-    updated_at: Mapped[Optional[datetime]] = mapped_column(DateTime)
 
     __table_args__ = (
         Index("student_email_idx", "email"),
