@@ -24,15 +24,22 @@ def display_students():
         print("No pending student registrations found.")
         return
 
-    print(f"Processing {len(students)} pending student(s)...")
+    total_students = len(students)
+    print(f"\nProcessing {total_students} pending student(s)...\n")
     
-    for student in students:
-        program = program_from_reference(student.reference)
-        if not program:
-            raise ValueError("Program not found from reference:", student.reference)
-        service = RegisterService(db, student, program)
-        service.register_student()
-        exit()
+    for index, student in enumerate(students, 1):
+        print(f"[{index}/{total_students}] Processing student: {student.name}")
+        try:
+            program = program_from_reference(student.reference)
+            if not program:
+                print(f"⚠️  Error: Program not found for student {student.name} (Reference: {student.reference})")
+                continue
+                
+            service = RegisterService(db, student, program)
+            service.register_student()
+            
+        except Exception as e:
+            print(f"❌ Failed to register {student.name}: {str(e)}\n")
 
 
 def main():
