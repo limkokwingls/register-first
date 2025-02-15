@@ -17,8 +17,37 @@ class RegisterService:
         self.student = student
         self.program = program
 
+    def clean_and_validate_name(self, name: str) -> str | None:
+        """Clean and validate a student name.
+        
+        Returns:
+            str | None: The cleaned name if valid, None if invalid
+        """
+        if not name or not isinstance(name, str):
+            return None
+            
+        # Split name into parts and clean each part
+        name_parts = name.strip().split()
+        
+        # Validate that we have at least two names
+        if len(name_parts) < 2:
+            return None
+            
+        # Convert each part to title case
+        cleaned_parts = [part.strip().title() for part in name_parts]
+        return " ".join(cleaned_parts)
+
     def register_student(self):
         try:
+            # Clean and validate the student name first
+            cleaned_name = self.clean_and_validate_name(self.student.name)
+            if not cleaned_name:
+                print(f"❌ Invalid student name: {self.student.name}. Name must contain at least two words.")
+                return
+                
+            # Update the student name with the cleaned version
+            self.student.name = cleaned_name
+            
             browser = Browser()
             browser.check_logged_in()
             

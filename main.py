@@ -42,6 +42,7 @@ def display_students():
             print(f"❌ Failed to register {student.name}: {str(e)}\n")
 
 
+
 def main():
     display_students()
 
