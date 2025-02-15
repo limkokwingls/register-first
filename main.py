@@ -1,15 +1,7 @@
-from PySide6.QtWidgets import QApplication
 from sqlalchemy.orm import sessionmaker
 
-from config.database import engine
-from models import Base
-from ui.main.main_window import MainWindow
-from ui.main.settings import Settings
-from ui.main.settings_dialog import SettingsDialog
-
-Base.metadata.create_all(bind=engine)
-
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+from config.database import SessionLocal, engine
+from models import Base, Student
 
 
 def get_db():
@@ -20,15 +12,24 @@ def get_db():
         db.close()
 
 
+def display_students():
+    db = get_db()
+    students = db.query(Student).all()
+    
+    print("\nAll Students:")
+    print("-" * 80)
+    print(f"{'ID':<5} {'Reference':<15} {'Name':<25} {'Student No':<12} {'Program':<20}")
+    print("-" * 80)
+    
+    for student in students:
+        print(f"{student.id:<5} {student.reference:<15} {student.names:<25} {student.std_no or 'N/A':<12} {student.program.name:<20}")
+    
+    print("-" * 80)
+    print(f"Total Students: {len(students)}")
+
+
 def main():
-    app = QApplication()
-    window = MainWindow(get_db())
-    window.show()
-    settings = Settings()
-    if settings.term == "" or not settings.intake_date or settings.base_url == "":
-        dialog = SettingsDialog(window)
-        dialog.exec()
-    app.exec()
+    display_students()
 
 
 if __name__ == "__main__":
