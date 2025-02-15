@@ -11,16 +11,12 @@ from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.wait import WebDriverWait
 from urllib3.exceptions import InsecureRequestWarning
 
-from browser.payloads import (
-    add_semester_payload,
-    add_update_payload,
-    create_student_payload,
-    register_program_payload,
-    student_details_payload,
-)
-from main import CURRENT_TERM
-from model import Program
+from browser.payloads import (add_semester_payload, add_update_payload,
+                              create_student_payload, register_program_payload,
+                              student_details_payload)
+from constants import CURRENT_TERM
 from models import Student
+from program_data import Program
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -260,8 +256,6 @@ class Browser:
         if not form:
             raise ValueError("Form cannot be None")
         target = "Year 1 Sem 1"
-        if program.bhr_year:
-            target = program.bhr_year
         sem_options = form.select("#x_SemesterID option")
         for option in sem_options:
             option_str = option.get_text(strip=True)

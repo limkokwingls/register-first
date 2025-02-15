@@ -5,9 +5,6 @@ from models import Base, Student
 from program_data import program_from_reference
 from service import RegisterService
 
-CURRENT_TERM = "2025-02"
-INTAKE_DATE = "2025-02-03"
-
 
 def get_db():
     db = SessionLocal()
@@ -27,8 +24,9 @@ def display_students():
         program = program_from_reference(student.reference)
         if not program:
             raise ValueError("Program not found from reference:", student.reference)
-        # service = RegisterService(student, program)
-        # service.register()
+        service = RegisterService(db, student, program)
+        service.register_student()
+        exit()
 
 
 def main():

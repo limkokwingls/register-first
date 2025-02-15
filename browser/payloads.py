@@ -1,6 +1,6 @@
 import datetime
 
-from main import CURRENT_TERM, INTAKE_DATE
+from constants import CURRENT_TERM, INTAKE_DATE
 from models import Student
 from program_data import get_program, program_from_reference
 

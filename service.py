@@ -1,22 +1,23 @@
 import traceback
 
 from rich import print
+from sqlalchemy.orm import Session
 
 from browser import Browser
-from main import get_db
-from model import Program
 from models import Student
+from program_data import Program
 
 browser = Browser()
 
 
 class RegisterService:
 
-    def __init__(self, student: Student, program: Program):
+    def __init__(self, db: Session, student: Student, program: Program):
+        self.db = db
         self.student = student
         self.program = program
 
-    def register(self):
+    def register_student(self):
         try:
             print("Initializing...")
             browser = Browser()
@@ -55,11 +56,10 @@ class RegisterService:
             traceback.print_exc()
 
     def save_student_number(self, id: str, std_num: str):
-        db = get_db()
-        student = db.query(Student).get(id)
+        student = self.db.query(Student).get(id)
         if student:
             student.std_no = std_num
-            db.add(student)
-            db.commit()
+            self.db.add(student)
+            self.db.commit()
         else:
             print("Student with id", id, " not found")
