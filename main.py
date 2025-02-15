@@ -20,6 +20,12 @@ def display_students():
         db.query(Student).filter(Student.paid == True, Student.std_no.is_(None)).all()
     )
 
+    if not students:
+        print("No pending student registrations found.")
+        return
+
+    print(f"Processing {len(students)} pending student(s)...")
+    
     for student in students:
         program = program_from_reference(student.reference)
         if not program:

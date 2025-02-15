@@ -13,19 +13,16 @@ from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.wait import WebDriverWait
 from urllib3.exceptions import InsecureRequestWarning
 
-from browser.payloads import (
-    add_semester_payload,
-    add_update_payload,
-    create_student_payload,
-    register_program_payload,
-    student_details_payload,
-)
+from browser.payloads import (add_semester_payload, add_update_payload,
+                              create_student_payload, register_program_payload,
+                              student_details_payload)
 from constants import CURRENT_TERM
 from models import Student
 from program_data import Program
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig()
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.ERROR)
 
 BASE_URL = f"https://cmslesotho.limkokwing.net/campus/registry/"
 SESSION_FILE = "session.pkl"

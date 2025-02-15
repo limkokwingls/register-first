@@ -19,40 +19,39 @@ class RegisterService:
 
     def register_student(self):
         try:
-            print("Initializing...")
             browser = Browser()
             browser.check_logged_in()
-            print("Creating student...")
+            
+            print(f"\nProcessing student registration...")
             std_no = browser.create_student(self.student)
+            if not std_no:
+                print("❌ Failed to create student record")
+                return
 
-            if std_no:
-                print(f"{std_no} | Adding student details...")
-                success = browser.add_student_details(std_no, self.student)
-                if success:
-                    print(f"{std_no} | Registering for {self.program.code}...")
-                    std_program_id = browser.register_program(std_no, self.program.code)
-                    if std_program_id:
-                        print(f"{std_no} | Adding semester...")
-                        std_semester_id = browser.add_semester(
-                            std_program_id,
-                            self.program,
-                        )
-                        if std_semester_id:
-                            print(f"{std_no} | Adding modules...")
-                            browser.add_modules(std_semester_id)
-                            print(f"{std_no} | Updating semester registration...")
-                            browser.add_update(std_no)
-                            print(f"{std_no} | Updating database...")
-                            self.save_student_number(
-                                id=self.student.id,
-                                std_num=std_no,
-                            )
-                        else:
-                            print("Failed to add semester")
-            else:
-                print("Failed to create student")
+            print(f"✓ Created student [{std_no}]")
+            if not browser.add_student_details(std_no, self.student):
+                print("❌ Failed to add student details")
+                return
+
+            print(f"✓ Added personal details")
+            std_program_id = browser.register_program(std_no, self.program.code)
+            if not std_program_id:
+                print(f"❌ Failed to register program {self.program.code}")
+                return
+
+            print(f"✓ Registered program {self.program.code}")
+            std_semester_id = browser.add_semester(std_program_id, self.program)
+            if not std_semester_id:
+                print("❌ Failed to add semester")
+                return
+
+            browser.add_modules(std_semester_id)
+            browser.add_update(std_no)
+            self.save_student_number(id=self.student.id, std_num=std_no)
+            print(f"✓ Completed registration for student [{std_no}]")
+            
         except Exception as e:
-            print(f"Error saving student: {e}")
+            print(f"❌ Registration failed: {str(e)}")
             traceback.print_exc()
 
     def save_student_number(self, id: str, std_num: str):
@@ -61,5 +60,6 @@ class RegisterService:
             student.std_no = std_num
             self.db.add(student)
             self.db.commit()
+            print(f"✓ Saved student number {std_num} for student {id}")
         else:
-            print("Student with id", id, " not found")
+            print(f"❌ Student with id {id} not found in database")
