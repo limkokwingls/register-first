@@ -1,7 +1,6 @@
 import datetime
 
 from main import CURRENT_TERM, INTAKE_DATE
-from model import Program, StudentInfo
 from models import Student
 from program_data import get_program, program_from_reference
 
@@ -31,7 +30,7 @@ def create_student_payload(student: Student) -> dict:
     }
 
 
-def student_details_payload(std_no: str, std: StudentInfo) -> dict:
+def student_details_payload(std_no: str, std: Student) -> dict:
     if std.gender.upper() == "MALE":
         gender = "M"
     elif std.gender.upper() == "FEMALE":
@@ -56,9 +55,9 @@ def student_details_payload(std_no: str, std: StudentInfo) -> dict:
         "x_MaritalStatus": marital_status,
         "x_CampusCode": "Lesotho",
         "x_StudentID": std_no,
-        "x_EmergencyRelation": std.next_of_kin.relationship,
-        "x_EmergencyContact": std.next_of_kin.name,
-        "x_EmergencyNo": std.next_of_kin.phone,
+        "x_EmergencyRelation": std.next_of_kin_relationship,
+        "x_EmergencyContact": std.next_of_kin_name,
+        "x_EmergencyNo": std.next_of_kin_phone,
         "btnAction": "Add",
     }
 

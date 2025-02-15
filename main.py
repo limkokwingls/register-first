@@ -29,6 +29,8 @@ def display_students():
 
     for student in students:
         program = program_from_reference(student.reference)
+        if not program:
+            raise ValueError("Program not found from reference:", student.reference)
         print(
             f"{student.id:<5} {student.reference:<15} {student.name:<25} {program.name:<20}"
         )

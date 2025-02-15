@@ -11,27 +11,24 @@ from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.wait import WebDriverWait
 from urllib3.exceptions import InsecureRequestWarning
 
-from browser.payloads import (
-    add_semester_payload,
-    add_update_payload,
-    create_student_payload,
-    register_program_payload,
-    student_details_payload,
-)
-from models import Program, Student
-from ui.main.settings import Settings
+from browser.payloads import (add_semester_payload, add_update_payload,
+                              create_student_payload, register_program_payload,
+                              student_details_payload)
+from main import CURRENT_TERM
+from model import Program
+from models import Student
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-settings = Settings()
-
-BASE_URL = f"{settings.base_url}campus/registry"
+BASE_URL = f"https://cmslesotho.limkokwing.net/campus/registry/"
 
 urllib3.disable_warnings(InsecureRequestWarning)
 
 
-def get_form_payload(form: Tag):
+def get_form_payload(form: Tag | None):
+    if not form:
+        raise ValueError("Form cannot be an empty Tag")
     data = {}
     inputs = form.select("input")
     for tag in inputs:
@@ -131,7 +128,7 @@ class Browser:
     def create_student(self, std: Student) -> str | None:
         logger.info("Creating student...")
         url = f"{BASE_URL}/r_studentadd.php"
-        std_id = self.find_student(names=std.names, national_id=std.national_id)
+        std_id = self.find_student(names=std.name, national_id=std.national_id)
         if std_id:
             logger.info(f"Student already exists, student number: {std_id}")
             return std_id
@@ -142,7 +139,7 @@ class Browser:
         response = self.post(url, payload)
         if "Successful" in response.text:
             logger.info("Student created successfully")
-            return self.find_student(std.national_id, std.names)
+            return self.find_student(std.national_id, std.name)
         else:
             logger.error("Failed to create student")
             return None
@@ -192,11 +189,11 @@ class Browser:
             logger.error("Failed to register student into program")
 
     def add_semester(
-        self, std_program_id: int, program_code: str, std: Student
+        self, std_program_id: int, program_code: str, std: Student, program: Program
     ) -> int | None:
         logger.info(f"Adding semester for student '{std_program_id}'")
         url = f"{BASE_URL}/r_stdsemesterlist.php?showmaster=1&StdProgramID={std_program_id}"
-        term = Settings().term
+        term = CURRENT_TERM
         std_semester_id = self.get_id_for(self.fetch(url), term)
         if std_semester_id:
             logger.info(f"Semester already added, semester id: {std_semester_id}")
@@ -206,7 +203,7 @@ class Browser:
         form = page.select_one("form")
         payload = get_form_payload(form) | add_semester_payload(
             std_program_id=std_program_id,
-            semester_id=self.read_semester_id(form, std.program),
+            semester_id=self.read_semester_id(form, program),
             program_code=program_code,
             term=term,
         )
@@ -272,7 +269,7 @@ class Browser:
         )
 
     @staticmethod
-    def get_id_for(response: requests.Response, search_key: str) -> str:
+    def get_id_for(response: requests.Response, search_key: str):
         page = BeautifulSoup(response.text, "lxml")
         table = page.select_one("table#ewlistmain")
         if table:
