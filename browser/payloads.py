@@ -1,33 +1,32 @@
 import datetime
 
-from model import StudentInfo
-from program_data import get_program
-from ui.main.settings import Settings
+from main import CURRENT_TERM, INTAKE_DATE
+from model import Program, StudentInfo
+from models import Student
+from program_data import get_program, program_from_reference
 
 date_format = "%Y-%m-%d"
 
 
-def create_student_payload(student_info: StudentInfo) -> dict:
-    program = get_program(student_info.program.code)
-    settings = Settings()
-    if not settings.intake_date_str():
-        raise ValueError("Intake date is not set")
-    if not settings.term:
-        raise ValueError("Term is not set")
+def create_student_payload(student: Student) -> dict:
+    program = program_from_reference(student.reference)
+    if not program:
+        raise ValueError("Program extracted from reference: ", student.reference)
+
     return {
         "x_InstitutionID": "1",
         "x_OthChgID": "OthChg0502",
-        "x_IntakeDateCode": settings.intake_date_str(),
-        "x_StudentName": student_info.names,
-        "x_StudentNo": student_info.national_id,
+        "x_IntakeDateCode": INTAKE_DATE,
+        "x_StudentName": student.name,
+        "x_StudentNo": student.national_id,
         "x_StudentStatus": "Active",
         "x_opSchoolID": program.school_id,
         "x_opProgramID": program.program_id,
-        "x_opTermCode": settings.term,
+        "x_opTermCode": CURRENT_TERM,
         "x_CountryCode": "LSO",
-        "x_StdContactNo": student_info.phone1,
-        "x_StdContactNo2": student_info.phone2,
-        "x_StdEmail": student_info.email,
+        "x_StdContactNo": student.phone1,
+        "x_StdContactNo2": student.phone2,
+        "x_StdEmail": student.email,
         "btnAction": "Add",
     }
 
@@ -66,19 +65,15 @@ def student_details_payload(std_no: str, std: StudentInfo) -> dict:
 
 def register_program_payload(std_no: str, program_code: str) -> dict:
     program = get_program(program_code)
-    settings = Settings()
-    if not settings.intake_date_str():
-        raise ValueError("Intake date is not set")
-    if not settings.term:
-        raise ValueError("Term is not set")
-
+    if not program:
+        raise ValueError("Program with code not found, code: ", program_code)
     return {
         "a_add": "A",
         "x_StudentID": std_no,
         "x_StdProgRegDate": today(),
         "x_ProgramID": program.program_id,
-        "x_ProgramIntakeDate": settings.intake_date_str(),
-        "x_TermCode": settings.term,
+        "x_ProgramIntakeDate": INTAKE_DATE,
+        "x_TermCode": CURRENT_TERM,
         "x_StructureID": program.version,
         "x_ProgStreamCode": "Normal",
         "x_ProgramStatus": "Active",
@@ -86,8 +81,12 @@ def register_program_payload(std_no: str, program_code: str) -> dict:
     }
 
 
-def add_semester_payload(std_program_id: int, program_code: str, term: str, semester_id: str) -> dict:
+def add_semester_payload(
+    std_program_id: int, program_code: str, term: str, semester_id: str
+) -> dict:
     program = get_program(program_code)
+    if not program:
+        raise ValueError("Program with code not found, code: ", program_code)
     return {
         "x_StdProgramID": std_program_id,
         "x_SchoolID": program.school_id,
