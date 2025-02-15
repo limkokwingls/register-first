@@ -1,4 +1,6 @@
 import logging
+import os
+import pickle
 from urllib.parse import quote_plus
 
 import requests
@@ -11,9 +13,13 @@ from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.wait import WebDriverWait
 from urllib3.exceptions import InsecureRequestWarning
 
-from browser.payloads import (add_semester_payload, add_update_payload,
-                              create_student_payload, register_program_payload,
-                              student_details_payload)
+from browser.payloads import (
+    add_semester_payload,
+    add_update_payload,
+    create_student_payload,
+    register_program_payload,
+    student_details_payload,
+)
 from constants import CURRENT_TERM
 from models import Student
 from program_data import Program
@@ -22,6 +28,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 BASE_URL = f"https://cmslesotho.limkokwing.net/campus/registry/"
+SESSION_FILE = "session.pkl"
 
 urllib3.disable_warnings(InsecureRequestWarning)
 
@@ -55,9 +62,23 @@ class Browser:
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super(Browser, cls).__new__(cls)
-            cls._instance.session = requests.Session()
-            cls._instance.session.verify = False
+            cls._instance.load_session()
         return cls._instance
+
+    def load_session(self):
+        if os.path.exists(SESSION_FILE):
+            with open(SESSION_FILE, "rb") as f:
+                self.session = pickle.load(f)
+            logger.info("Loaded existing session")
+        else:
+            self.session = requests.Session()
+            self.session.verify = False
+            logger.info("Created new session")
+
+    def save_session(self):
+        with open(SESSION_FILE, "wb") as f:
+            pickle.dump(self.session, f)
+        logger.info("Saved session")
 
     def login(self):
         logger.info("Logging in...")
@@ -74,11 +95,16 @@ class Browser:
         selenium_cookies = driver.get_cookies()
         driver.quit()
 
+        if self.session is None:
+            raise ValueError("Session is not initialized")
+
         self.session.cookies.clear()
         for cookie in selenium_cookies:
             self.session.cookies.set(
                 cookie["name"], cookie["value"], domain=cookie["domain"]
             )
+
+        self.save_session()
 
     def fetch(self, url: str) -> Response:
         logger.info(f"Fetching {url}")
