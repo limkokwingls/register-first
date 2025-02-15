@@ -192,9 +192,7 @@ class Browser:
         else:
             logger.error("Failed to register student into program")
 
-    def add_semester(
-        self, std_program_id: int, program_code: str, std: Student, program: Program
-    ) -> int | None:
+    def add_semester(self, std_program_id: int, program: Program) -> int | None:
         logger.info(f"Adding semester for student '{std_program_id}'")
         url = f"{BASE_URL}/r_stdsemesterlist.php?showmaster=1&StdProgramID={std_program_id}"
         term = CURRENT_TERM
@@ -208,7 +206,7 @@ class Browser:
         payload = get_form_payload(form) | add_semester_payload(
             std_program_id=std_program_id,
             semester_id=self.read_semester_id(form, program),
-            program_code=program_code,
+            program_code=program.code,
             term=term,
         )
         response = self.post(f"{BASE_URL}/r_stdsemesteradd.php", payload)
