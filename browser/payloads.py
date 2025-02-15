@@ -4,7 +4,10 @@ from constants import CURRENT_TERM, INTAKE_DATE
 from models import Student
 from program_data import get_program, program_from_reference
 
-date_format = "%Y-%m-%d"
+
+def format_date(date):
+    date_format = "%Y-%m-%d"
+    return datetime.datetime.fromtimestamp(date).strftime(date_format)
 
 
 def create_student_payload(student: Student) -> dict:
@@ -46,7 +49,7 @@ def student_details_payload(std_no: str, std: Student) -> dict:
 
     return {
         "x_DateApplied": today(),
-        "x_BirthDate": std.date_of_birth.strftime(date_format),
+        "x_BirthDate": format_date(std.date_of_birth),
         "x_OfferTypeCode": "Full Acceptance",
         "x_ReligionCode": std.religion,
         "x_RaceCode": "African",
