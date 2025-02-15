@@ -11,9 +11,13 @@ from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.wait import WebDriverWait
 from urllib3.exceptions import InsecureRequestWarning
 
-from browser.payloads import (add_semester_payload, add_update_payload,
-                              create_student_payload, register_program_payload,
-                              student_details_payload)
+from browser.payloads import (
+    add_semester_payload,
+    add_update_payload,
+    create_student_payload,
+    register_program_payload,
+    student_details_payload,
+)
 from main import CURRENT_TERM
 from model import Program
 from models import Student
@@ -254,7 +258,9 @@ class Browser:
         self.post(f"{BASE_URL}/s_updateadd.php", payload)
 
     @staticmethod
-    def read_semester_id(form: Tag, program: Program):
+    def read_semester_id(form: Tag | None, program: Program):
+        if not form:
+            raise ValueError("Form cannot be None")
         target = "Year 1 Sem 1"
         if program.bhr_year:
             target = program.bhr_year
@@ -280,7 +286,7 @@ class Browser:
                     return row.select_one("a").attrs["href"].split("=")[-1]
 
     @staticmethod
-    def get_std_program_id(response: requests.Response, code: str) -> str:
+    def get_std_program_id(response: requests.Response, code: str):
         page = BeautifulSoup(response.text, "lxml")
         table = page.select_one("table#ewlistmain")
         if table:
