@@ -69,12 +69,33 @@ __data = [
         name="Certificate in Innovative Travel & Tourism",
         version=514,
     ),
+    Program(
+        school_id=16,
+        faculty="FCTH",
+        code="CITT",
+        program_id=167,
+        name="Certificate in Innovative Travel & Tourism",
+        version=514,
+    ),
+    Program(
+        school_id=16,
+        faculty="FCTH",
+        code="CTM",
+        program_id=167,
+        name="Certificate in Innovative Travel & Tourism",
+        version=514,
+    ),
 ]
 
 
 def get_program(code: str) -> Program | None:
     return next((program for program in __data if program.code == code), None)
 
+def program_from_reference(reference: str | None) -> Program | None:
+    if not reference:
+        raise ValueError("Reference cannot be empty")
+    code = reference.split("-")[1]
+    return get_program(code.upper())
 
 def get_program_names(faculty: str | None) -> List[str]:
     if not faculty:

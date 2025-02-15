@@ -2,7 +2,7 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Optional
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Index, String
+from sqlalchemy import Boolean, Index, Integer, String
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -53,7 +53,7 @@ class Student(Base):
     phone1: Mapped[str] = mapped_column(String, nullable=False)
     phone2: Mapped[Optional[str]] = mapped_column(String)
     religion: Mapped[Religion] = mapped_column(nullable=False)
-    date_of_birth: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    date_of_birth: Mapped[datetime] = mapped_column(Integer, nullable=False)
     gender: Mapped[Gender] = mapped_column(nullable=False)
     marital_status: Mapped[MaritalStatus] = mapped_column(nullable=False)
     birth_place: Mapped[str] = mapped_column(String, nullable=False)
