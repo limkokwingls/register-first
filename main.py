@@ -1,6 +1,4 @@
-from sqlalchemy.orm import sessionmaker
-
-from config.database import SessionLocal, engine
+from config.database import SessionLocal
 from models import Base, Student
 
 
@@ -22,7 +20,7 @@ def display_students():
     print("-" * 80)
     
     for student in students:
-        print(f"{student.id:<5} {student.reference:<15} {student.names:<25} {student.std_no or 'N/A':<12} {student.program.name:<20}")
+        print(f"{student.id:<5} {student.reference:<15} {student.name:<25} {student.std_no or 'N/A':<12} {student.reference:<20}")
     
     print("-" * 80)
     print(f"Total Students: {len(students)}")

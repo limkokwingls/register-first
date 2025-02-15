@@ -9,9 +9,11 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 class Base(DeclarativeBase):
     pass
 
+
 class Gender(StrEnum):
     MALE = "Male"
     FEMALE = "Female"
+
 
 class Religion(StrEnum):
     CHRISTIAN = "Christian"
@@ -20,12 +22,14 @@ class Religion(StrEnum):
     BUDDHIST = "Buddhist"
     OTHER = "Other"
 
+
 class MaritalStatus(StrEnum):
     SINGLE = "Single"
     MARRIED = "Married"
     DIVORCED = "Divorced"
     WIDOWED = "Widowed"
     OTHER = "Other"
+
 
 class NextOfKinRelationship(StrEnum):
     FATHER = "Father"
@@ -36,10 +40,12 @@ class NextOfKinRelationship(StrEnum):
     CHILD = "Child"
     OTHER = "Other"
 
+
 class Student(Base):
     __tablename__: str = "students"
-    
+
     id: Mapped[str] = mapped_column(String, primary_key=True)
+    std_no: Mapped[str] = mapped_column(String)
     national_id: Mapped[str] = mapped_column(String, nullable=False)
     reference: Mapped[Optional[str]] = mapped_column(String)
     name: Mapped[str] = mapped_column(String, nullable=False)
@@ -55,7 +61,9 @@ class Student(Base):
     high_school: Mapped[str] = mapped_column(String, nullable=False)
     next_of_kin_name: Mapped[str] = mapped_column(String, nullable=False)
     next_of_kin_phone: Mapped[str] = mapped_column(String, nullable=False)
-    next_of_kin_relationship: Mapped[NextOfKinRelationship] = mapped_column(nullable=False)
+    next_of_kin_relationship: Mapped[NextOfKinRelationship] = mapped_column(
+        nullable=False
+    )
     paid: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[Optional[datetime]] = mapped_column(DateTime)
