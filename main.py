@@ -14,7 +14,7 @@ def get_db():
         db.close()
 
 
-def display_students():
+def register_students():
     db = get_db()
     students = (
         db.query(Student).filter(Student.paid == True, Student.std_no.is_(None)).all()
@@ -41,6 +41,20 @@ def display_students():
         except Exception as e:
             print(f"❌ Failed to register {student.name}: {str(e)}\n")
 
+
+def display_students():
+    db = get_db()
+
+    students = (
+        db.query(Student).filter(Student.paid == True, Student.std_no.isnot(None)).all()
+    )
+    total_students = len(students)
+    print(f"\nDisplaying {total_students} registered student(s):\n")
+    
+    print(f"{'Student Number':<15} {'Name':<30}")
+    print("-" * 45)
+    for student in students:
+        print(f"{student.std_no:<15} {student.name:<30}")
 
 
 def main():
